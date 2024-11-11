@@ -64,7 +64,7 @@ services:
       - MONGO_INITDB_ROOT_USERNAME
       - MONGO_INITDB_ROOT_PASSWORD
     ports:
-      - "27015:27015"
+      - "27017:27017"
     networks:
       - musicando-network
 
