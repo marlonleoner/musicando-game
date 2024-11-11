@@ -1,0 +1,98 @@
+version: "3"
+
+services:
+  manager:
+    container_name: musicando-manager
+    build:
+      context: manager
+    tty: true
+    volumes:
+      - ./database:/musicando-manager/database
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD
+    ports:
+      - "8080:8080"
+    links:
+      - mongo
+    depends_on:
+      - mongo
+    networks:
+      - musicando-network
+
+  events:
+    container_name: musicando-events
+    build:
+      context: events
+    tty: true
+    volumes:
+      - ./database:/musicando-events/database
+    environment:
+      - REDIS_HOST
+      - REDIS_PORT
+      - REDIS_USERNAME
+      - REDIS_PASSWORD
+    ports:
+      - "7777:7777"
+    links:
+      - redis
+    depends_on:
+      - redis
+      - manager
+    networks:
+      - musicando-network
+
+  redis:
+    container_name: musicando-redis
+    image: redis:alpine
+    tty: true
+    restart: always
+    command: /bin/sh -c "redis-server --requirepass $$REDIS_PASSWORD"
+    environment:
+      - REDIS_PASSWORD
+    ports:
+      - "6379:6379"
+    networks:
+      - musicando-network
+
+  mongo:
+    container_name: musicando-mongo
+    image: mongo
+    tty: true
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD
+    ports:
+      - "27015:27015"
+    networks:
+      - musicando-network
+
+  # front-host:
+  #   container_name: musicando-host
+  #   build:
+  #     context: front-host
+  #   tty: true
+  #   ports:
+  #     - 9090:9090
+  #   depends_on:
+  #     - manager
+  #     - events
+  #   networks:
+  #     - musicando-network
+
+  # front-client:
+  #   container_name: musicando-client
+  #   build:
+  #     context: front-client
+  #   tty: true
+  #   ports:
+  #     - 80:80
+  #   depends_on:
+  #     - server
+  #   networks:
+  #     - musicando-network
+
+networks:
+  musicando-network:
+    driver: bridge
