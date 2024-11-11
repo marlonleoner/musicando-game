@@ -15,6 +15,11 @@ public class Question {
     private String id;
 
     @DBRef
+    private Game game;
+
+    private Integer roundNumber;
+
+    @DBRef
     private Song answer;
 
     @DBRef

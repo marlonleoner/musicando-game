@@ -104,7 +104,7 @@ public class GameAggregation {
             Game game = getGameOrException(gameCode);
             if (game.isConnected()) return;
 
-            questionService.removeQuestions(game);
+            questionService.remove(game);
             gameService.remove(game);
             log.info("Host game {} destroyed", game.getCode());
         } catch (Exception ex) {
@@ -196,9 +196,9 @@ public class GameAggregation {
 
     public void onStartGame(Game game, RequestStartParams request) {
         // Generate questions and save them to the game
-        List<Question> questions = questionService.createQuestions(request);
+        questionService.createAndSaveQuestions(game, request);
 
-        gameService.onGameStart(game, questions);
+        gameService.onGameStart(game);
 
         // Send 'START_GAME' event to host and dispatch 'PRE_ROUND' event to rabbit
         sendEventToRabbit(Event.instanceRoundPreLiveEvent(game.getCode()));
@@ -217,10 +217,10 @@ public class GameAggregation {
         log.debug("Round is about to start in game '{}'", game.getCode());
 
         // Get round question
-        Question question = questionService.getQuestionRound(game.getCode(), game.getNextRoundNumber());
+        Question question = questionService.getNextRoundInGame(game);
 
         // Create Round instance
-        Round round = new Round(game.getNextRoundNumber(), question);
+        Round round = new Round(question);
         game.setCurrentRound(round);
         gameService.save(game);
 
@@ -276,7 +276,7 @@ public class GameAggregation {
         game.setCurrentRound(null);
         gameService.save(game);
 
-        questionService.removeQuestions(game);
+        questionService.remove(game);
 
         broadcastAll(BroadcastEnum.UPDATE_GAME, game, game);
     }

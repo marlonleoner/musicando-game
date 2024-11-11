@@ -5,8 +5,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 @Data
@@ -31,9 +29,6 @@ public class Game {
     @DBRef
     private Playlist playlist;
 
-    @DBRef
-    private List<Question> questions;
-
     private Round currentRound;
 
     public Game(String code) {
@@ -49,7 +44,7 @@ public class Game {
     }
 
     public Integer getNextRoundNumber() {
-        return Objects.isNull(currentRound) ? 1 : currentRound.getId() + 1;
+        return Objects.isNull(currentRound) ? 1 : currentRound.getId();
     }
 
     public boolean isSecretValid(String other) {

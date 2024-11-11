@@ -47,9 +47,8 @@ public class GameService {
         return repository.findById(code);
     }
 
-    public void onGameStart(Game game, List<Question> questions) {
+    public void onGameStart(Game game) {
         game.setState(GameStateEnum.LIVE);
-        game.setQuestions(questions);
         save(game);
     }
 }

@@ -22,8 +22,8 @@ public class Round {
 
     private List<Song> alternatives;
 
-    public Round(Integer currentRound, Question question) {
-        this.id = currentRound;
+    public Round(Question question) {
+        this.id = question.getRoundNumber();
         this.state = RoundStateEnum.PRE_LIVE;
         this.answer = question.getAnswer();
         this.alternatives = question.getAlternatives();
