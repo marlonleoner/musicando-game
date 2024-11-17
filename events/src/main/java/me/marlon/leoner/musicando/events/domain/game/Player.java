@@ -1,16 +1,16 @@
 package me.marlon.leoner.musicando.events.domain.game;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import me.marlon.leoner.musicando.events.domain.game.dto.PlayerDTO;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Objects;
 
 @Data
 @NoArgsConstructor
+@Document("players")
 public class Player {
 
     @Id
@@ -28,8 +28,7 @@ public class Player {
 
     private boolean vip;
 
-    @DBRef
-    private Game game;
+    private String gameId;
 
     private Integer points;
 
@@ -43,14 +42,8 @@ public class Player {
 //    totalCorrectGuesses: Number(redisPlayer.totalCorrectGuesses),
 //    finalPosition: Number(redisPlayer.finalPosition)
 
-    public PlayerDTO toDTO() {
-        PlayerDTO dto = new PlayerDTO();
-        dto.setId(id);
-        dto.setName(name);
-        dto.setConnected(connected);
-        dto.setVip(vip);
-
-        return dto;
+    public boolean isSecretValid(String other) {
+        return Objects.nonNull(secret) && secret.equals(other);
     }
 
     public void incrementPoints(Integer points) {
@@ -61,8 +54,13 @@ public class Player {
         this.roundsCorrects++;
     }
 
-    @JsonIgnore
-    public boolean isSecretValid(String other) {
-        return Objects.nonNull(secret) && secret.equals(other);
+    public PlayerDTO toDTO() {
+        PlayerDTO dto = new PlayerDTO();
+        dto.setId(id);
+        dto.setName(name);
+        dto.setConnected(connected);
+        dto.setVip(vip);
+
+        return dto;
     }
 }

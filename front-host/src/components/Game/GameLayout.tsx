@@ -6,7 +6,7 @@ import { RoundState } from "../../types/enums";
 import RoundLive from "../RoundLive";
 
 const GameLayout = () => {
-    const { game, round } = useContext(GameContext);
+    const { game, match, round } = useContext(GameContext);
 
     const audioTickClockRef = useRef(null);
     const audioPreviewRef = useRef(null);
@@ -34,9 +34,9 @@ const GameLayout = () => {
             setTick(3);
         } else if (round.state === RoundState.LIVE) {
             const totalTime = audioPreviewRef.current.duration;
-            const startTime = Math.random() * (totalTime - game.roundDuration);
+            const startTime = Math.random() * (totalTime - match.roundDuration);
             console.log(
-                `song starting in ${startTime}s - total duration: ${totalTime} - round duration: ${game.roundDuration}`
+                `song starting in ${startTime}s - total duration: ${totalTime} - round duration: ${match.roundDuration}`
             );
             audioPreviewRef.current.currentTime = startTime;
             audioPreviewRef.current.volume = 0.1;
@@ -63,17 +63,6 @@ const GameLayout = () => {
         <>
             <AnimatePresence>
                 <RoundLive alternatives={round?.alternatives} anwserId={round?.answerId} />;
-                {/* {(() => {
-                    switch (round?.state) {
-                        case "PRE_LIVE":
-                        case "LIVE":
-                            return <RoundLive alternatives={round?.alternatives} />;
-                        case "POST_LIVE":
-                            return <RoundPostLive />;
-                        default:
-                            return <p>State não mapeado</p>;
-                    }
-                })()} */}
             </AnimatePresence>
 
             <audio ref={audioTickClockRef}>

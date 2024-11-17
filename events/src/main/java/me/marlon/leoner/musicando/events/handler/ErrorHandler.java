@@ -1,7 +1,6 @@
 package me.marlon.leoner.musicando.events.handler;
 
 import me.marlon.leoner.musicando.events.domain.exception.Error;
-import me.marlon.leoner.musicando.events.domain.exception.ObjectNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -16,11 +15,5 @@ public class ErrorHandler {
     @ExceptionHandler(Exception.class)
     public Error handleGenericException(Exception ex) {
         return new Error("InternalError", Collections.singletonList(ex.getMessage()));
-    }
-
-    @ExceptionHandler(ObjectNotFoundException.class)
-    @ResponseStatus(code = HttpStatus.NOT_FOUND)
-    public Error handleObjectNotFoundException(ObjectNotFoundException ex) {
-        return new Error(ex.getId(), Collections.singletonList(ex.getMessage()));
     }
 }

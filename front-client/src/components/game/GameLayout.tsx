@@ -7,11 +7,10 @@ import RoundPreLive from "../RoundPreLive";
 import RoundSummary from "../RoundSummary";
 
 const GameLayout = () => {
-    const { round, response } = useContext(GameContext);
+    const { round, roundResult } = useContext(GameContext);
 
     return (
         <>
-            <pre>{JSON.stringify(response)}</pre>
             {(() => {
                 switch (round?.state) {
                     case RoundState.PRE_LIVE:
@@ -19,9 +18,9 @@ const GameLayout = () => {
                     case RoundState.LIVE:
                         return <RoundLive alternatives={round.alternatives} />;
                     case RoundState.FINISHED:
-                        return <Alternative alternative={round.answer} correctAnswer={response?.correctAnswer} />;
+                        return <Alternative alternative={round.answer} correctAnswer={roundResult?.correct} />;
                     case RoundState.SUMMARY:
-                        return <RoundSummary answer={round.answer} response={response} />;
+                        return <RoundSummary answer={round.answer} result={roundResult} />;
                     default:
                         return <p>State não mapeado</p>;
                 }

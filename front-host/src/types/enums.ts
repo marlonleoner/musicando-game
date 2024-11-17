@@ -11,16 +11,15 @@ export enum EventType {
 
 export enum BroadcastEvent {
     WELCOME = "welcome",
-    UPDATE_ROUND = "round/update",
+    DISCONNECT = "disconnect",
     UPDATE_GAME = "game/update",
+    UPDATE_MATCH = "match/update",
+    MATCH_RESULT = "match/result",
+    UPDATE_ROUND = "round/update",
+    ROUND_RESULT = "round/result",
     NEW_PLAYER = "player/new",
     UPDATE_PLAYER = "player/update",
     REMOVE_PLAYER = "player/remove",
-    RESPONSE_ANSWER = "response-answer",
-    // Host Actions
-    CHANGE_PLAYLIST = "change-playlist",
-    CHANGE_TIMER = "change-timer",
-    CHANGE_AMOUNT = "change-amount",
 }
 
 export enum GameState {
@@ -29,6 +28,13 @@ export enum GameState {
     PRE_LIVE = "PRE_LIVE",
     LIVE = "LIVE",
     FINISHED = "FINISHED",
+}
+
+export enum MatchState {
+    PREPARING = "PREPARING",
+    LIVE = "LIVE",
+    FINISHED = "FINISHED",
+    PAUSED = "PAUSED",
 }
 
 export enum RoundState {

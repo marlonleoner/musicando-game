@@ -8,7 +8,7 @@ interface IRoundLiveProps {
 
 const RoundLive = ({ alternatives, anwserId }: IRoundLiveProps) => {
     return (
-        <>
+        <div className="h-full flex flex-col items-center justify-center">
             <motion.div
                 key={"live-header"}
                 initial="hidden"
@@ -42,7 +42,7 @@ const RoundLive = ({ alternatives, anwserId }: IRoundLiveProps) => {
                     </motion.div>
                 ))}
             </motion.div>
-        </>
+        </div>
     );
 };
 

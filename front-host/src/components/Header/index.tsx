@@ -5,13 +5,13 @@ import NavbarCenter from "./NavbarCenter";
 import SmallLogo from "./SmallLogo";
 
 const Header = () => {
-    const { game, round } = useContext(GameContext);
+    const { game, match, round } = useContext(GameContext);
 
     return (
         <header className="flex items-center justify-between h-16 px-8 text-[2.4vw] uppercase">
             <SmallLogo />
-            <GameCode code={game.code} />
-            <NavbarCenter game={game} playlist={game.playlist} round={round} />
+            <GameCode code={game.id} />
+            <NavbarCenter match={match} playlist={match.playlist} round={round} />
         </header>
     );
 };

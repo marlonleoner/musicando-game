@@ -29,8 +29,7 @@ public enum EventTypeEnum {
     VIP_CHANGE_TIMER("vip/round-duration", VipRoundDurationHandler.class),
     VIP_CHANGE_PLAYLIST("vip/change-playlist", VipChangePlaylistHandler.class),
     VIP_START_GAME("vip/start-game", VipStartGameHandler.class),
-    VIP_RESET_GAME("vip/reset-game", VipResetGameHandler.class),
-    ;
+    VIP_RESET_GAME("vip/reset-game", VipResetGameHandler.class);
 
     private final String type;
 

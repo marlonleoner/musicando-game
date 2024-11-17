@@ -40,7 +40,7 @@ export const GameProvider = ({ children }: Element) => {
         connect({
             code,
             username: user,
-            avatar,
+            avatar: encodeURIComponent(avatar),
         });
     };
 
@@ -53,7 +53,7 @@ export const GameProvider = ({ children }: Element) => {
     };
 
     const changePlaylist = (playlist: IPlaylist) => {
-        sendMessage({ type: EventType.CHANGE_PLAYLIST, object: playlist });
+        if (playlist) sendMessage({ type: EventType.CHANGE_PLAYLIST, object: playlist.id });
     };
 
     const changeRoundDuration = (duration: number) => {
@@ -65,13 +65,13 @@ export const GameProvider = ({ children }: Element) => {
     };
 
     const startGame = () => {
-        const { game } = state;
+        const { match } = state;
         sendMessage({
             type: EventType.START_GAME,
             object: {
-                timer: game.roundDuration,
-                amount: game.numberOfSongs,
-                playlist: game.playlist,
+                timer: match.roundDuration,
+                amount: match.numberOfSongs,
+                playlistId: match.playlistId,
             },
         });
     };

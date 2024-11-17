@@ -1,42 +1,53 @@
 package me.marlon.leoner.musicando.events.domain.game;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import me.marlon.leoner.musicando.events.domain.game.dto.RoundDTO;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
+@Document("rounds")
 public class Round {
 
-    private Integer id;
+    @Id
+    private String id;
+
+    private String matchId;
+
+    private Integer roundNumber;
 
     private RoundStateEnum state;
-
-    private Long startedAt;
 
     private Song answer;
 
     private List<Song> alternatives;
 
-    public Round(Question question) {
-        this.id = question.getRoundNumber();
-        this.state = RoundStateEnum.PRE_LIVE;
+    private Long startedAt;
+
+    private Long finishedAt;
+
+    public Round(String matchId, Integer roundNumber, Question question) {
+        this.id = UUID.randomUUID().toString();
+        this.roundNumber = roundNumber;
+        this.matchId = matchId;
+        this.state = RoundStateEnum.CREATED;
         this.answer = question.getAnswer();
         this.alternatives = question.getAlternatives();
     }
 
-    @JsonIgnore
     public boolean isLive() {
         return Objects.nonNull(state) && RoundStateEnum.LIVE.equals(state);
     }
 
     public RoundDTO toLiveRound() {
         RoundDTO dto = new RoundDTO();
-        dto.setId(id);
+        dto.setId(roundNumber);
         dto.setState(state);
         dto.setPreview(answer.getPreview());
         dto.setAlternatives(alternatives.stream().map(Song::toDTO).toList());
@@ -46,7 +57,7 @@ public class Round {
 
     public RoundDTO toFinishedRound() {
         RoundDTO dto = new RoundDTO();
-        dto.setId(id);
+        dto.setId(roundNumber);
         dto.setState(state);
         dto.setAnswer(answer.toDTO());
         dto.setAlternatives(alternatives.stream().map(Song::toDTO).toList());
@@ -56,7 +67,7 @@ public class Round {
 
     public RoundDTO toSummaryRound() {
         RoundDTO dto = new RoundDTO();
-        dto.setId(id);
+        dto.setId(roundNumber);
         dto.setState(state);
         dto.setAnswer(answer.toDTO());
 

@@ -1,12 +1,12 @@
-import { IAlternative, IRoundResponse } from "../types/types";
+import { IAlternative, IRoundResult } from "../types/types";
 
 interface RoundSummaryProps {
     answer: IAlternative;
-    response: IRoundResponse;
+    result: IRoundResult;
 }
 
-const RoundSummary = ({ answer, response }: RoundSummaryProps) => {
-    if (!response) {
+const RoundSummary = ({ answer, result }: RoundSummaryProps) => {
+    if (!result) {
         return <div>Loading..</div>;
     }
 

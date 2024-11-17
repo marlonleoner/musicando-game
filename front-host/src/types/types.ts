@@ -1,4 +1,4 @@
-import { GameState, RoundState } from "./enums";
+import { GameState, MatchState, RoundState } from "./enums";
 
 export type Element = {
     children: JSX.Element | JSX.Element[] | string;
@@ -9,20 +9,27 @@ export type FallbackElement = Element & { fallback: () => JSX.Element };
 export type Reducer = (state: IGameContext, action: any) => IGameContext;
 
 export interface IGameContext {
-    reconnect: (code: string, secret: string) => void;
+    reconnect: (id: string, secret: string) => void;
     createGame: () => void;
     game: IGame;
+    match?: IMatch;
     round?: IRound;
     players: IPlayers[];
+    roundResult: IRoundResult[];
+    matchResult: IMatchResult[];
 }
 
 export interface IGame {
-    code?: string;
+    id?: string;
     secret?: string;
     state: GameState;
+}
+
+export interface IMatch {
     roundDuration?: number;
     numberOfSongs?: number;
     playlist?: IPlaylist;
+    state: MatchState;
 }
 
 export interface IPlaylist {
@@ -42,7 +49,7 @@ export interface IRound {
 }
 
 export interface IPlayers {
-    id: number;
+    id: string;
     name: string;
     vip: boolean;
     connected: boolean;
@@ -56,4 +63,19 @@ export interface IAlternative {
     artist: string;
     preview: string;
     thumbnail: string;
+}
+
+export interface IRoundResult {
+    roundId: string;
+    playerId: string;
+    correct: boolean;
+    points: number;
+    guessTime: number;
+}
+
+export interface IMatchResult {
+    playerId: string;
+    correctAnswers: boolean;
+    totalPoints: number;
+    totalGuessTime: number;
 }

@@ -15,8 +15,8 @@ public class ClientDisconnectHandler extends AbstractHandler {
     @Override
     public void handle(Event event) throws AbstractException {
         ConnectionSocket connection = converter.deserialize(event.getObject(), ConnectionSocket.class);
-        Game game = aggregation.getGameOrException(event.getGameCode());
-        Player player = aggregation.getPlayerOrException(game, connection.getId());
+        Game game = aggregation.getGameOrException(event.getGameId());
+        Player player = aggregation.getPlayerOrException(connection.getId());
         aggregation.onClientDisconnect(game, player);
     }
 }

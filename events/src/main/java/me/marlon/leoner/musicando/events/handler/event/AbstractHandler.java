@@ -29,7 +29,7 @@ public abstract class AbstractHandler {
             handle(event);
         } catch (Exception ex) {
             socketService.disconnectClient(event.getSessionId(), ex.getMessage());
-            log.error("An error occurred while processing event {} in game {} - reason {}", event.getType(), event.getGameCode(), ex.getMessage());
+            log.error("An error occurred while processing event {} in game {} - reason {}", event.getType(), event.getGameId(), ex.getMessage());
             ex.printStackTrace();
         }
     }

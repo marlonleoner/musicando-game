@@ -17,7 +17,7 @@ const onWelcomeHandler = (state: IGameContext, object: any) => {
 };
 
 const onGameUpdate = (state: IGameContext, object: any) => {
-    localStorage.setItem("msc:code", object.code);
+    localStorage.setItem("msc:code", object.id);
 
     return {
         ...state,
@@ -25,18 +25,32 @@ const onGameUpdate = (state: IGameContext, object: any) => {
     };
 };
 
+const onMatchUpdate = (state: IGameContext, object: any) => {
+    return {
+        ...state,
+        match: object,
+    };
+};
+
+const onMatchResult = (state: IGameContext, object: any) => {
+    return {
+        ...state,
+        matchResult: object,
+    };
+};
+
 const onRoundUpdate = (state: IGameContext, object: any) => {
     return {
         ...state,
         round: object,
-        response: object.state === RoundState.PRE_LIVE ? null : state.response,
+        roundResult: object.state === RoundState.PRE_LIVE ? null : state.roundResult,
     };
 };
 
-const onPlayerResponse = (state: IGameContext, object: any) => {
+const onRoundResult = (state: IGameContext, object: any) => {
     return {
         ...state,
-        response: object,
+        roundResult: object,
     };
 };
 
@@ -47,10 +61,14 @@ export const useGameReducer = (state: IGameContext, payload: IPayloadEvent) => {
             return onWelcomeHandler(state, object);
         case BroadcastEvent.UPDATE_GAME:
             return onGameUpdate(state, object);
+        case BroadcastEvent.UPDATE_MATCH:
+            return onMatchUpdate(state, object);
+        case BroadcastEvent.MATCH_RESULT:
+            return onMatchResult(state, object);
         case BroadcastEvent.UPDATE_ROUND:
             return onRoundUpdate(state, object);
-        case BroadcastEvent.PLAYER_ANSWER:
-            return onPlayerResponse(state, object);
+        case BroadcastEvent.ROUND_RESULT:
+            return onRoundResult(state, object);
         default:
             return state;
     }

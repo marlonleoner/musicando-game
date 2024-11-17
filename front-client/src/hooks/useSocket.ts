@@ -17,6 +17,8 @@ export const useSocket = (
 
     const connect = useCallback(
         ({ code, username, avatar, id, secret }: IConnect) => {
+            console.log(avatar);
+
             const q = id && secret ? `id=${id}&secret=${secret}&` : `name=${username}&avatar=${avatar}&`;
             const ws = new WebSocket(`ws://192.168.0.111:7777/musicando/${code}?${q}role=client`);
             ws.addEventListener("open", onOpen);

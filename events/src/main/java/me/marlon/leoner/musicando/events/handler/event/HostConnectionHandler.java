@@ -18,7 +18,7 @@ public class HostConnectionHandler extends AbstractHandler {
     public void handle(Event event) throws AbstractException {
         ConnectionSocket params = converter.deserialize(event.getObject(), ConnectionSocket.class);
 
-        Game game = aggregation.getGameOrException(event.getGameCode());
+        Game game = aggregation.getGameOrException(event.getGameId());
         if (params.isReconnect()) {
             if (!game.isSecretValid(params.getSecret())) throw new EventException("invalid game secret");
             aggregation.onHostReconnect(game, params);

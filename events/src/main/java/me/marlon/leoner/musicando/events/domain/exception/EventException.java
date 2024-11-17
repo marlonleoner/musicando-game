@@ -5,7 +5,7 @@ import lombok.Getter;
 public class EventException extends AbstractException {
 
     @Getter
-    private boolean disconnect;
+    private final boolean disconnect;
 
     public EventException(String message) {
         this(message, false);

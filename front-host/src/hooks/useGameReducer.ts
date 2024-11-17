@@ -1,5 +1,5 @@
-import { BroadcastEvent } from "../types/enums";
-import { IGameContext } from "../types/types";
+import { BroadcastEvent, GameState } from "../types/enums";
+import { IGameContext, IMatchResult, IPlayers, IRoundResult } from "../types/types";
 
 interface IPayloadEvent {
     type: BroadcastEvent;
@@ -7,7 +7,7 @@ interface IPayloadEvent {
 }
 
 const onWelcomeHandler = (state: IGameContext, { type, object }: IPayloadEvent) => {
-    localStorage.setItem("msc:code", object.code);
+    localStorage.setItem("msc:code", object.id);
     localStorage.setItem("msc:secret", object.secret);
 
     return {
@@ -16,84 +16,110 @@ const onWelcomeHandler = (state: IGameContext, { type, object }: IPayloadEvent) 
     };
 };
 
-export const useGameReducer = (state: IGameContext, payload: IPayloadEvent) => {
-    const { type, object } = payload;
-    const { game, round, players } = state;
+const onDisconnectHandler = (state: IGameContext, { type, object }: IPayloadEvent) => {
+    localStorage.removeItem("msc:code");
+    localStorage.removeItem("msc:secret");
+
+    return {
+        ...state,
+        game: { state: GameState.NOT_CREATED },
+        players: [] as IPlayers[],
+        roundResult: [] as IRoundResult[],
+        matchResult: [] as IMatchResult[],
+    };
+};
+
+const onGameUpdateHandler = (state: IGameContext, { type, object }: IPayloadEvent) => {
+    return {
+        ...state,
+        game: object,
+    };
+};
+
+const onMatchUpdateHandler = (state: IGameContext, { type, object }: IPayloadEvent) => {
+    return {
+        ...state,
+        match: object,
+    };
+};
+
+const onMatchResultHandler = (state: IGameContext, { type, object }: IPayloadEvent) => {
+    return {
+        ...state,
+        matchResult: object,
+    };
+};
+
+const onRoundUpdateHandler = (state: IGameContext, { type, object }: IPayloadEvent) => {
+    const { round } = state;
+
+    return {
+        ...state,
+        round: {
+            ...round,
+            ...object,
+        },
+    };
+};
+
+const onRoundResultHandler = (state: IGameContext, { type, object }: IPayloadEvent) => {
+    return {
+        ...state,
+        roundResult: object,
+    };
+};
+
+const onPlayerEnterHandler = (state: IGameContext, { type, object }: IPayloadEvent) => {
+    const { players } = state;
+
+    return {
+        ...state,
+        players: [...players, object],
+    };
+};
+
+const onPlayerUpdateHandler = (state: IGameContext, { type, object }: IPayloadEvent) => {
+    const { players } = state;
     const index = players.findIndex((p) => p.id === object.id);
 
-    switch (type) {
+    return {
+        ...state,
+        players: [...state.players.slice(0, index), object, ...state.players.slice(index + 1)],
+    };
+};
+
+const onPlayerLeaveHandler = (state: IGameContext, { type, object }: IPayloadEvent) => {
+    const { players } = state;
+    const index = players.findIndex((p) => p.id === object.id);
+
+    return {
+        ...state,
+        players: [...state.players.slice(0, index), ...state.players.slice(index + 1)],
+    };
+};
+
+export const useGameReducer = (state: IGameContext, payload: IPayloadEvent) => {
+    switch (payload.type) {
         case BroadcastEvent.WELCOME:
             return onWelcomeHandler(state, payload);
+        case BroadcastEvent.DISCONNECT:
+            return onDisconnectHandler(state, payload);
         case BroadcastEvent.UPDATE_GAME:
-            return {
-                ...state,
-                game: object,
-            };
+            return onGameUpdateHandler(state, payload);
+        case BroadcastEvent.UPDATE_MATCH:
+            return onMatchUpdateHandler(state, payload);
+        case BroadcastEvent.MATCH_RESULT:
+            return onMatchResultHandler(state, payload);
         case BroadcastEvent.UPDATE_ROUND:
-            return {
-                ...state,
-                round: {
-                    ...round,
-                    ...object,
-                },
-            };
+            return onRoundUpdateHandler(state, payload);
+        case BroadcastEvent.ROUND_RESULT:
+            return onRoundResultHandler(state, payload);
         case BroadcastEvent.NEW_PLAYER:
-            return {
-                ...state,
-                players: [...players, object],
-            };
+            return onPlayerEnterHandler(state, payload);
         case BroadcastEvent.UPDATE_PLAYER:
-            return {
-                ...state,
-                players: [...state.players.slice(0, index), object, ...state.players.slice(index + 1)],
-            };
+            return onPlayerUpdateHandler(state, payload);
         case BroadcastEvent.REMOVE_PLAYER:
-            return {
-                ...state,
-                players: [...state.players.slice(0, index), ...state.players.slice(index + 1)],
-            };
-        case BroadcastEvent.RESPONSE_ANSWER:
-            // , correctAnswer: true, roundPoints: 180, points: 180}
-            return {
-                ...state,
-                // players: [
-                //     ...state.players.slice(0, index),
-                //     {
-                //         ...player,
-                //         points: object.points,
-                //         roundPoints: object.roundPoints,
-                //     },
-                //     ...state.players.slice(index + 1),
-                // ],
-            };
-        //
-        //
-        //
-        // Host Actions
-        case BroadcastEvent.CHANGE_PLAYLIST:
-            return {
-                ...state,
-                game: {
-                    ...state.game,
-                    playlist: object,
-                },
-            };
-        case BroadcastEvent.CHANGE_TIMER:
-            return {
-                ...state,
-                game: {
-                    ...state.game,
-                    roundDuration: object,
-                },
-            };
-        case BroadcastEvent.CHANGE_AMOUNT:
-            return {
-                ...state,
-                game: {
-                    ...state.game,
-                    numberOfSongs: object,
-                },
-            };
+            return onPlayerLeaveHandler(state, payload);
         default:
             return state;
     }

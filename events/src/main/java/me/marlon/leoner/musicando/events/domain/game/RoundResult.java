@@ -2,12 +2,14 @@ package me.marlon.leoner.musicando.events.domain.game;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @NoArgsConstructor
+@Document("results")
 public class RoundResult {
 
-    private Integer round;
+    private String roundId;
 
     private String playerId;
 
@@ -16,4 +18,11 @@ public class RoundResult {
     private Integer points;
 
     private Long guessTime;
+
+    public RoundResult(String playerId) {
+        this.playerId = playerId;
+        this.correct = false;
+        this.points = 0;
+        this.guessTime = 0L;
+    }
 }
