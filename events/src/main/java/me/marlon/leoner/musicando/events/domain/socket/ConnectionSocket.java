@@ -16,9 +16,9 @@ public class ConnectionSocket {
 
     private String sessionId;
 
-    private String gameCode;
+    private String gameId;
 
-    private String clientId;
+    private String playerId;
 
     private String secret;
 
@@ -31,8 +31,8 @@ public class ConnectionSocket {
     public ConnectionSocket(WebSocketSession session) {
         Map<String, Object> attributes = session.getAttributes();
         this.sessionId = session.getId();
-        this.gameCode = (String) attributes.getOrDefault("gameCode", null);
-        this.clientId = (String) attributes.getOrDefault("id", null);
+        this.gameId = (String) attributes.getOrDefault("gameCode", null);
+        this.playerId = (String) attributes.getOrDefault("id", null);
         this.secret = (String) attributes.getOrDefault("secret", null);
         this.role = (String) attributes.getOrDefault("role", null);
         this.name = (String) attributes.getOrDefault("name", null);
@@ -46,11 +46,13 @@ public class ConnectionSocket {
 
     @JsonIgnore
     public boolean isReconnect() {
-        return Objects.nonNull(clientId) && Objects.nonNull(secret);
+        return Objects.nonNull(playerId) && Objects.nonNull(secret);
     }
 
     @JsonIgnore
     public String getId() {
-        return Objects.nonNull(clientId) ? clientId : sessionId;
+        if (RoleEnum.HOST.equals(getRole())) return null;
+
+        return Objects.nonNull(playerId) ? playerId : sessionId;
     }
 }

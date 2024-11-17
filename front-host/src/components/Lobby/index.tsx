@@ -2,7 +2,7 @@ import { useContext, useMemo } from "react";
 import { GameContext } from "../../context/GameContext";
 
 const Lobby = () => {
-    const { game, players } = useContext(GameContext);
+    const { match, players } = useContext(GameContext);
 
     const avatar = useMemo(
         () => (
@@ -40,17 +40,17 @@ const Lobby = () => {
             <div className="w-full p-8 rounded-xl flex flex-col gap-8 bg-primary uppercase tracking-tighter font-bold text-xl">
                 <div className="flex justify-between pr-4 py-8 border-b border-solid">
                     <span>Número de músicas:</span>
-                    <span>{game.numberOfSongs} Músicas</span>
+                    <span>{match.numberOfSongs} Músicas</span>
                 </div>
                 <div className="flex justify-between pr-4 py-8 border-b border-solid">
                     <span>Duração da rodada:</span>
-                    <span>{game.roundDuration} segundos</span>
+                    <span>{match.roundDuration} segundos</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <img className="w-36 h-36 rounded-2xl" src={game.playlist?.thumbnail} alt="playlist thumbnail" />
+                    <img className="w-36 h-36 rounded-2xl" src={match.playlist?.thumbnail} alt="playlist thumbnail" />
                     <div className="flex flex-col">
-                        <span>{game.playlist?.name}</span>
-                        <span className="font-normal text-gray-300">{game.playlist?.total_songs} músicas</span>
+                        <span>{match.playlist?.name}</span>
+                        <span className="font-normal text-gray-300">{match.playlist?.total_songs} músicas</span>
                     </div>
                 </div>
             </div>

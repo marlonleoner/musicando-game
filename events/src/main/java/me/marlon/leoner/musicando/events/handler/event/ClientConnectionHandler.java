@@ -19,14 +19,14 @@ public class ClientConnectionHandler extends AbstractHandler {
 
     @Override
     public void handle(Event event) throws AbstractException {
-        Game game = aggregation.getGameOrException(event.getGameCode());
+        Game game = aggregation.getGameOrException(event.getGameId());
 
         ConnectionSocket params = converter.deserialize(event.getObject(), ConnectionSocket.class);
-        Optional<String> clientId = Optional.ofNullable(params.getClientId());
-        if (clientId.isEmpty()) {
+        Optional<String> playerId = Optional.ofNullable(params.getPlayerId());
+        if (playerId.isEmpty()) {
             aggregation.onClientConnect(game, params);
         } else {
-            Player player = aggregation.getPlayerOrException(game, clientId.get());
+            Player player = aggregation.getPlayerOrException(playerId.get());
             if (!player.isSecretValid(params.getSecret())) throw new EventException("invalid game secret");
             aggregation.onClientReconnect(game, player, params);
         }

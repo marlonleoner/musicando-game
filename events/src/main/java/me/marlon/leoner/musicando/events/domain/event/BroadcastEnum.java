@@ -8,15 +8,18 @@ import lombok.Getter;
 public enum BroadcastEnum {
     // Both
     WELCOME("welcome"),
-    UPDATE_ROUND("round/update"),
     // Host
     PLAYER_NEW("player/new"),
     PLAYER_UPDATE("player/update"),
     PLAYER_REMOVE("player/remove"),
-    PLAYER_ANSWER("player/answer"),
-    // Client
-    UPDATE_GAME("game/update"),
-    ;
+    //
+    //
+    //
+    GAME_UPDATE("game/update"),
+    MATCH_UPDATE("match/update"),
+    MATCH_RESULT("match/result"),
+    ROUND_UPDATE("round/update"),
+    ROUND_RESULT("round/result");
 
     private String type;
 }

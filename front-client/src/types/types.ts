@@ -1,4 +1,4 @@
-import { GameState, RoundState } from "./enums";
+import { GameState, MatchState, RoundState } from "./enums";
 
 export type Element = {
     children: JSX.Element | JSX.Element[] | string;
@@ -17,11 +17,12 @@ export interface IGameContext {
     startGame: () => void;
     resetGame: () => void;
     sendAnswer: (answerId: string) => void;
-    playerAvatar?: string;
     player?: IPlayer;
     game?: IGame;
+    match?: IMatch;
     round?: IRound;
-    response?: IRoundResponse;
+    roundResult?: IRoundResult;
+    matchResult?: IMatchResult;
 }
 
 export interface IPlayer {
@@ -34,11 +35,15 @@ export interface IPlayer {
 }
 
 export interface IGame {
-    code: string;
+    id: string;
     state: GameState;
-    roundDuration: number;
-    numberOfSongs: number;
-    playlist: IPlaylist;
+}
+
+export interface IMatch {
+    roundDuration?: number;
+    numberOfSongs?: number;
+    playlistId: string;
+    state: MatchState;
 }
 
 // private Song answer;
@@ -66,7 +71,17 @@ export interface IPlaylist {
     total_songs: number;
 }
 
-export interface IRoundResponse {
-    correctAnswer: boolean;
-    roundPoints: number;
+export interface IRoundResult {
+    roundId: string;
+    playerId: string;
+    correct: boolean;
+    points: number;
+    guessTime: number;
+}
+
+export interface IMatchResult {
+    playerId: string;
+    correctAnswers: boolean;
+    totalPoints: number;
+    totalGuessTime: number;
 }

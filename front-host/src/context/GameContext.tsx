@@ -2,14 +2,16 @@ import { createContext, useEffect, useReducer } from "react";
 import { useRoom } from "../hooks/useFetch";
 import { useGameReducer } from "../hooks/useGameReducer";
 import { useSocket } from "../hooks/useSocket";
-import { GameState } from "../types/enums";
+import { BroadcastEvent, GameState } from "../types/enums";
 import { Element, IGameContext, Reducer } from "../types/types";
 
 const initialGameContext: IGameContext = {
-    reconnect: (code: string, secret: string) => {},
+    reconnect: () => {},
     createGame: () => {},
     game: { state: GameState.NOT_CREATED },
     players: [],
+    roundResult: [],
+    matchResult: [],
 };
 
 export const GameContext = createContext<IGameContext>(null as IGameContext);
@@ -19,20 +21,20 @@ export const GameProvider = ({ children }: Element) => {
     const { doFetch: createGameCode } = useRoom();
 
     useEffect(() => {
-        const { code, secret } = state.game;
-        if (code && secret) {
-            localStorage.setItem("msc:reconnect", `${state.game.code}:${state.game.secret}`);
-            console.log("msc:reconnect", `${state.game.code}:${state.game.secret}`);
+        const { id, secret } = state.game;
+        if (id && secret) {
+            localStorage.setItem("msc:reconnect", `${state.game.id}:${state.game.secret}`);
+            console.log("msc:reconnect", `${state.game.id}:${state.game.secret}`);
         }
-    }, [state.game.code]);
+    }, [state.game.id]);
 
     const onOpenHandle = (evt: Event) => {
         console.log("onOpenHandle", evt);
     };
 
     const onCloseHandle = () => {
-        localStorage.removeItem("msc:reconnect");
         console.log("WebSocket connection closed");
+        dispatch({ type: BroadcastEvent.DISCONNECT });
     };
 
     const onMessageHandle = (evt: MessageEvent<any>) => {

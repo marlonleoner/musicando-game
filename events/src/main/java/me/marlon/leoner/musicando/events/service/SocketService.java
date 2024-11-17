@@ -35,16 +35,16 @@ public class SocketService {
         insertSession(session);
         Event event = new Event(connection.getSessionId(), connection);
         rabbitService.sendMessage(Constants.EVENTS_QUEUE, event);
-        log.info("Connecting session {} in game {}...", connection.getSessionId(), connection.getGameCode());
+        log.info("Connecting session {} in game {}...", connection.getSessionId(), connection.getGameId());
     }
 
-    public void onMessage(ConnectionSocket params, String message) {
+    public void onMessage(ConnectionSocket connection, String message) {
         log.debug("onMessage {}", message);
         Event event = converter.deserialize(message, Event.class);
-        event.setSessionId(params.getSessionId());
-        event.setGameCode(params.getGameCode());
-        event.setPlayerId(params.getId());
-        event.setRole(params.getRole().getDescription());
+        event.setSessionId(connection.getSessionId());
+        event.setGameId(connection.getGameId());
+        event.setPlayerId(connection.getId());
+        event.setRole(connection.getRole().getDescription());
 
         rabbitService.sendMessage(Constants.EVENTS_QUEUE, event);
     }
@@ -53,7 +53,7 @@ public class SocketService {
         removeSession(session);
         Event event = Event.instanceDisconnectEvent(connection);
         rabbitService.sendMessage(Constants.EVENTS_QUEUE, event);
-        log.info("Client {} disconnect from game {} - status {}", connection.getSessionId(), connection.getGameCode(), closeStatus);
+        log.info("Client {} disconnect from game {} - status {}", connection.getSessionId(), connection.getGameId(), closeStatus);
     }
 
     private void insertSession(WebSocketSession session) {

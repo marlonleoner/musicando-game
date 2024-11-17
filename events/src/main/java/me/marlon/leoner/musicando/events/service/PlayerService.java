@@ -19,10 +19,6 @@ public class PlayerService {
 
     private final PlayerRepository repository;
 
-    public Optional<Player> getPlayer(String playerId) {
-        return repository.findById(playerId);
-    }
-
     public Player save(Player player) {
         return repository.save(player);
     }
@@ -31,24 +27,28 @@ public class PlayerService {
         repository.delete(player);
     }
 
-    public List<Player> getPlayers(Game game) {
-        return repository.findByGame(game);
+    public Optional<Player> getPlayer(String playerId) {
+        return repository.findById(playerId);
     }
 
-    public Optional<Player> getVipPlayer(Game game) {
-        return repository.findPlayerByGameAndConnectedAndVip(game, true, true);
+    public List<Player> getPlayers(String gameId) {
+        return repository.findByGameId(gameId);
     }
 
-    public boolean checkForVipPlayer(Game game) {
-        Optional<Player> vip = getVipPlayer(game);
+    public Optional<Player> getVipPlayer(String gameId) {
+        return repository.findPlayerByGameIdAndConnectedAndVip(gameId, true, true);
+    }
+
+    public boolean checkForVipPlayer(String gameId) {
+        Optional<Player> vip = getVipPlayer(gameId);
         return vip.isPresent();
     }
 
-    public Optional<Player> getNextVipPlayer(Game game) {
-        return repository.findPlayerByGameAndConnected(game, true);
+    public Optional<Player> getNextVipPlayer(String gameId) {
+        return repository.findPlayerByGameIdAndConnected(gameId, true);
     }
 
-    public Player onPlayerConnect(Game game, ConnectionSocket connection) {
+    public Player onPlayerConnect(ConnectionSocket connection, String gameId) {
         Player player = new Player();
         player.setId(connection.getSessionId());
         player.setSessionId(connection.getSessionId());
@@ -56,18 +56,18 @@ public class PlayerService {
         player.setName(connection.getName());
         player.setAvatar(connection.getAvatar());
         player.setConnected(true);
-        player.setVip(!checkForVipPlayer(game));
-        player.setGame(game);
+        player.setVip(!checkForVipPlayer(gameId));
+        player.setGameId(gameId);
         player.setPoints(0);
         player.setRoundsCorrects(0);
 
         return save(player);
     }
 
-    public void onPlayerReconnect(Game game, Player player, ConnectionSocket connection) {
+    public void onPlayerReconnect(Player player, ConnectionSocket connection, String gameId) {
         player.setSessionId(connection.getSessionId());
         player.setConnected(true);
-        player.setVip(!checkForVipPlayer(game));
+        player.setVip(!checkForVipPlayer(gameId));
         save(player);
     }
 

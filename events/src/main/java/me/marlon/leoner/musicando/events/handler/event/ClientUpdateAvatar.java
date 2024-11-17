@@ -14,8 +14,8 @@ public class ClientUpdateAvatar extends AbstractHandler {
     @Override
     protected void handle(Event event) throws AbstractException {
         String avatar = converter.deserialize(event.getObject(), String.class);
-        Game game = aggregation.getGameOrException(event.getGameCode());
-        Player player = aggregation.getPlayerOrException(game, event.getPlayerId());
+        Game game = aggregation.getGameOrException(event.getGameId());
+        Player player = aggregation.getPlayerOrException(event.getPlayerId());
         aggregation.onClientUpdateAvatar(player, avatar);
     }
 }

@@ -1,15 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
-import { GameState, RoundState } from "../../types/enums";
-import { IGame, IPlaylist, IRound } from "../../types/types";
+import { MatchState, RoundState } from "../../types/enums";
+import { IMatch, IPlaylist, IRound } from "../../types/types";
 
 interface INavbarCenter {
-    game: IGame;
+    match: IMatch;
     round?: IRound;
     playlist?: IPlaylist;
 }
 
-const NavbarCenter = ({ game, round, playlist }: INavbarCenter) => {
+const NavbarCenter = ({ match, round, playlist }: INavbarCenter) => {
     const [countdown, setCountdown] = useState(null);
 
     useEffect(() => {
@@ -20,29 +20,29 @@ const NavbarCenter = ({ game, round, playlist }: INavbarCenter) => {
 
     useEffect(() => {
         if (round?.state === RoundState.LIVE) {
-            setCountdown(game.roundDuration);
+            setCountdown(match.roundDuration);
         }
     }, [round?.state]);
 
     const title = useMemo(() => {
-        switch (game.state) {
-            case GameState.LOBBY:
+        switch (match.state) {
+            case MatchState.PREPARING:
                 return <span>Escolha uma playlist</span>;
-            case GameState.LIVE:
+            case MatchState.LIVE:
                 return (
                     <>
                         <span>{playlist?.name}</span>
                         <span>
-                            Rodada: {round?.id}/{game.numberOfSongs}
+                            Rodada: {round?.id}/{match.numberOfSongs}
                         </span>
                     </>
                 );
-            case GameState.FINISHED:
+            case MatchState.FINISHED:
                 return <span>Os Vencedores</span>;
             default:
-                return <span>{game.state} - Estado não mapeado</span>;
+                return <span>{match.state} - Estado não mapeado</span>;
         }
-    }, [game.state]);
+    }, [match.state]);
 
     return (
         <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-white w-4/12 h-20 text-primary [clip-path:polygon(0_0,100%_0,98%_100%,2%_100%)]">
@@ -67,7 +67,7 @@ const NavbarCenter = ({ game, round, playlist }: INavbarCenter) => {
                             width: round?.state === RoundState.LIVE ? 0 : "100%",
                             transition: {
                                 delay: 1,
-                                duration: round?.state === RoundState.LIVE ? game.roundDuration : 0,
+                                duration: round?.state === RoundState.LIVE ? match.roundDuration : 0,
                             },
                         }}
                         className="h-2 bg-primary"

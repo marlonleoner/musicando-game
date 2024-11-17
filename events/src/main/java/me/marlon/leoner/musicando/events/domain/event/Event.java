@@ -13,7 +13,7 @@ public class Event {
 
     private String type;
 
-    private String gameCode;
+    private String gameId;
 
     private String playerId;
 
@@ -27,50 +27,50 @@ public class Event {
 
         this.sessionId = sessionId;
         this.type = eventType;
-        this.gameCode = connection.getGameCode();
+        this.gameId = connection.getGameId();
         this.playerId = sessionId;
         this.role = connectionRole;
         this.object = connection;
     }
 
-    public static Event instanceRoundPreLiveEvent(String gameCode) {
+    public static Event instanceRoundPreLiveEvent(String gameId) {
         Event event = new Event();
-        event.setGameCode(gameCode);
+        event.setGameId(gameId);
         event.setType(EventTypeEnum.ROUND_PRE_LIVE.getType());
 
         return event;
     }
 
-    public static Event instanceRoundLiveEvent(String gameCode, Round round) {
+    public static Event instanceRoundLiveEvent(String gameId, Round round) {
         Event event = new Event();
-        event.setGameCode(gameCode);
+        event.setGameId(gameId);
         event.setType(EventTypeEnum.ROUND_LIVE.getType());
         event.setObject(round);
 
         return event;
     }
 
-    public static Event instanceRoundFinishEvent(String gameCode, Round round) {
+    public static Event instanceRoundFinishEvent(String gameId, Round round) {
         Event event = new Event();
-        event.setGameCode(gameCode);
+        event.setGameId(gameId);
         event.setType(EventTypeEnum.ROUND_FINISH.getType());
         event.setObject(round);
 
         return event;
     }
 
-    public static Event instanceRoundSummaryEvent(String gameCode, Round round) {
+    public static Event instanceRoundSummaryEvent(String gameId, Round round) {
         Event event = new Event();
-        event.setGameCode(gameCode);
+        event.setGameId(gameId);
         event.setType(EventTypeEnum.ROUND_SUMMARY.getType());
         event.setObject(round);
 
         return event;
     }
 
-    public static Event instanceGameFinishedEvent(String gameCode) {
+    public static Event instanceGameFinishedEvent(String gameId) {
         Event event = new Event();
-        event.setGameCode(gameCode);
+        event.setGameId(gameId);
         event.setType(EventTypeEnum.GAME_FINISH.getType());
 
         return event;
@@ -83,7 +83,7 @@ public class Event {
         Event event = new Event();
         event.setSessionId(connection.getSessionId());
         event.setType(eventType);
-        event.setGameCode(connection.getGameCode());
+        event.setGameId(connection.getGameId());
         event.setRole(connectionRole);
         event.setObject(connection);
 

@@ -12,7 +12,7 @@ public class CreateQuestionsRequest {
     private Integer amount;
 
     public CreateQuestionsRequest(RequestStartParams request) {
-        this.playlistId = request.getPlaylist().getId();
+        this.playlistId = request.getPlaylistId();
         this.amount = request.getAmount();
     }
 }

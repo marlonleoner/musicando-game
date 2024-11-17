@@ -3,34 +3,36 @@ package me.marlon.leoner.musicando.events.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.marlon.leoner.musicando.events.converter.JsonConverter;
-//import org.springframework.data.redis.core.RedisTemplate;
+import me.marlon.leoner.musicando.events.domain.cache.CacheEnum;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class RedisService {
 
-//    private final RedisTemplate<String, Object> redisTemplate;
-//
-//    private final JsonConverter converter;
-//
-//    public void set(String key, Object object) {
-//        redisTemplate.opsForValue().set(key, object, 60, TimeUnit.MINUTES);
-//    }
-//
-//    public <T> T get(String key, Class<T> type) {
-//        Object object = redisTemplate.opsForValue().get(key);
-//        return converter.deserialize(object, type);
-//    }
-//
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private final JsonConverter converter;
+
+    public void set(String key, Object object, Integer expireIn) {
+        redisTemplate.opsForValue().set(key, object, expireIn, TimeUnit.SECONDS);
+    }
+
+    public <T> Optional<T> get(String key, Class<T> type) {
+        Object object = redisTemplate.opsForValue().get(key);
+        return Optional.ofNullable(converter.deserialize(object, type));
+    }
+
+    public void invalidate(String key) {
+        redisTemplate.delete(key);
+    }
+
 //    public <T> List<T> getAll(String key, Class<T> type) {
 //        Set<String> keys = redisTemplate.keys(key);
 //        if (Objects.isNull(keys) || keys.isEmpty()) return Collections.emptyList();
@@ -45,9 +47,6 @@ public class RedisService {
 //        }).filter(Objects::nonNull).toList();
 //    }
 //
-//    public void remove(String key) {
-//        redisTemplate.delete(key);
-//    }
 //
 //    public void setItemInList(String key, Object object) {
 //        redisTemplate.opsForList().rightPush(key, object);

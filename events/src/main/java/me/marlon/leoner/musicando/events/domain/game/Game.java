@@ -3,16 +3,17 @@ package me.marlon.leoner.musicando.events.domain.game;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Objects;
 
 @Data
 @NoArgsConstructor
+@Document("games")
 public class Game {
 
     @Id
-    private String code;
+    private String id;
 
     private String sessionId;
 
@@ -22,30 +23,7 @@ public class Game {
 
     private GameStateEnum state;
 
-    private Integer numberOfSongs;
-
-    private Integer roundDuration;
-
-    @DBRef
-    private Playlist playlist;
-
-    private Round currentRound;
-
-    public Game(String code) {
-        this.code = code;
-        this.state = GameStateEnum.LOBBY;
-    }
-
-    public void reset() {
-        this.state = GameStateEnum.LOBBY;
-        this.numberOfSongs = null;
-        this.roundDuration = null;
-        this.currentRound = null;
-    }
-
-    public Integer getNextRoundNumber() {
-        return Objects.isNull(currentRound) ? 1 : currentRound.getId();
-    }
+    private String currentMatchId;
 
     public boolean isSecretValid(String other) {
         return Objects.nonNull(secret) && secret.equals(other);
@@ -63,7 +41,7 @@ public class Game {
         return isState(GameStateEnum.LOBBY);
     }
 
-    public boolean isLastRound() {
-        return Objects.nonNull(currentRound) && currentRound.getId().equals(numberOfSongs);
+    public boolean isFinished() {
+        return isState(GameStateEnum.FINISHED);
     }
 }

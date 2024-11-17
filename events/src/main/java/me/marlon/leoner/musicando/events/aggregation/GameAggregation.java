@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.marlon.leoner.musicando.events.domain.event.BroadcastEnum;
 import me.marlon.leoner.musicando.events.domain.event.Event;
-import me.marlon.leoner.musicando.events.domain.exception.ObjectNotFoundException;
+import me.marlon.leoner.musicando.events.domain.exception.EventException;
 import me.marlon.leoner.musicando.events.domain.game.*;
+import me.marlon.leoner.musicando.events.domain.game.dto.MatchResult;
 import me.marlon.leoner.musicando.events.domain.params.ClientAnswerResponse;
 import me.marlon.leoner.musicando.events.domain.params.RequestStartParams;
 import me.marlon.leoner.musicando.events.domain.socket.ConnectionSocket;
+import me.marlon.leoner.musicando.events.domain.game.Playlist;
 import me.marlon.leoner.musicando.events.service.*;
 import me.marlon.leoner.musicando.events.utils.Constants;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,18 +25,14 @@ import java.util.UUID;
 public class GameAggregation {
 
     private final SocketService socketService;
-
     private final RabbitService rabbitService;
-
     private final ScheduleService scheduleService;
-
+    private final ManagerIntegration managerIntegration;
     private final GameService gameService;
-
-    private final PlayerService playerService;
-
-    private final QuestionService questionService;
-
+    private final MatchService matchService;
+    private final RoundService roundService;
     private final ResultService resultService;
+    private final PlayerService playerService;
 
     private void sendEventToRabbit(Event event) {
         rabbitService.sendMessage(Constants.EVENTS_QUEUE, event);
@@ -49,22 +46,44 @@ public class GameAggregation {
         return gameService.createGame();
     }
 
-    public Optional<Game> getGame(String gameCode) {
-        return gameService.findGameByCode(gameCode);
+    public Optional<Game> getGame(String gameId) {
+        return gameService.findGameById(gameId);
     }
 
-    public Game getGameOrException(String gameCode) throws ObjectNotFoundException {
-        Optional<Game> game = getGame(gameCode);
-        return game.orElseThrow(() -> new ObjectNotFoundException("no such game"));
+    public Game getGameOrException(String gameId) throws EventException {
+        Optional<Game> game = getGame(gameId);
+        return game.orElseThrow(() -> new EventException("no such game", true));
     }
 
-    private Optional<Player> getPlayer(Game game, String playerId) {
-        return playerService.getPlayers(game).stream().filter(player -> player.getId().equals(playerId)).findFirst();
+    public Optional<Match> getMatch(String matchId) {
+        return matchService.findMatchById(matchId);
     }
 
-    public Player getPlayerOrException(Game game, String playerId) throws ObjectNotFoundException {
-        Optional<Player> player = getPlayer(game, playerId);
-        return player.orElseThrow(() -> new ObjectNotFoundException("no such player"));
+    public Match getMatchOrException(String matchId) throws EventException {
+        Optional<Match> match = getMatch(matchId);
+        return match.orElseThrow(() -> new EventException("no such match", true));
+    }
+
+    private Optional<Player> getPlayer(String playerId) {
+        return playerService.getPlayer(playerId);
+    }
+
+    public Player getPlayerOrException(String playerId) throws EventException {
+        Optional<Player> player = getPlayer(playerId);
+        return player.orElseThrow(() -> new EventException("no such player", true));
+    }
+
+    public Playlist getPlaylistOrException(String playlistId) throws EventException {
+        Optional<Playlist> playlist = managerIntegration.getPlaylistById(playlistId);
+        return playlist.orElseThrow(() -> new EventException("no such playlist", true));
+    }
+
+    private List<RoundResult> getRoundResult(String roundId) {
+        return resultService.getOrderedRoundResult(roundId);
+    }
+
+    public List<MatchResult> getMatchResult(List<String> roundsId) {
+        return resultService.getOrderedMatchResult(roundsId);
     }
 
     /**
@@ -74,42 +93,52 @@ public class GameAggregation {
      * @param connection connection parameters
      */
     public void onHostConnect(Game game, ConnectionSocket connection) {
-        game.setSecret(UUID.randomUUID().toString());
-        game.setSessionId((connection.getSessionId()));
-        game.setConnected(true);
-        gameService.save(game);
+        log.info("Host {} connected in game {}", connection.getSessionId(), game.getId());
 
-        broadcast(BroadcastEnum.WELCOME, game.getSessionId(), game);
-        log.info("Host {} connected in game {}", connection.getSessionId(), connection.getGameCode());
+        Match match = matchService.onCreate(game.getId());
+        gameService.onCreate(game, connection.getSessionId(), match.getId());
+
+        broadcast(BroadcastEnum.WELCOME, connection.getSessionId(), game);
+        broadcast(BroadcastEnum.MATCH_UPDATE, connection.getSessionId(), match);
     }
 
     public void onHostReconnect(Game game, ConnectionSocket connection) {
-        game.setSessionId(connection.getSessionId());
-        game.setConnected(true);
-        gameService.save(game);
+        log.info("Host {} reconnected in game {}", connection.getSessionId(), game.getId());
 
-        broadcast(BroadcastEnum.WELCOME, game.getSessionId(), game);
-        log.info("Host {} reconnected in game {}", connection.getSessionId(), connection.getGameCode());
+        Match match = matchService.onReconnect(game.getId(), game.getCurrentMatchId());
+        gameService.onReconnect(game, connection.getSessionId());
+
+        broadcast(BroadcastEnum.WELCOME, connection.getSessionId(), game);
+        broadcast(BroadcastEnum.MATCH_UPDATE, connection.getSessionId(), match);
+        notifyPlayersToHost(game);
+        notifyMatchResultIfFinished(game, match);
     }
 
-    public void onHostDisconnect(Game game) {
-        game.setConnected(false);
-        gameService.save(game);
-
-        scheduleService.executeAfterDelay(() -> onHostDestroy(game.getCode()), 30);
-    }
-
-    private void onHostDestroy(String gameCode) {
-        try {
-            Game game = getGameOrException(gameCode);
-            if (game.isConnected()) return;
-
-            questionService.remove(game);
-            gameService.remove(game);
-            log.info("Host game {} destroyed", game.getCode());
-        } catch (Exception ex) {
-            log.error("An error occurred while processing host destroy event in game {}: {}", gameCode, ex.getMessage());
+    private void notifyPlayersToHost(Game game) {
+        List<Player> players = playerService.getPlayers(game.getId());
+        for (Player player : players) {
+            broadcast(BroadcastEnum.PLAYER_NEW, game.getSessionId(), player);
         }
+    }
+
+    private void notifyMatchResultIfFinished(Game game, Match match) {
+        if (!game.isFinished() || !match.isFinished()) return;
+
+        notifyGameResults(game, match);
+    }
+
+    public void onHostDisconnect(Game game, Match match) {
+        gameService.onDisconnect(game);
+        matchService.onDisconnect(match);
+
+        broadcastPlayers(BroadcastEnum.GAME_UPDATE, game.getId(), game);
+        broadcastPlayers(BroadcastEnum.MATCH_UPDATE, game.getId(), match);
+        scheduleService.executeAfterDelay(() -> onHostDestroy(game.getId()), 30);
+    }
+
+    private void onHostDestroy(String gameId) {
+        boolean isDestroyed = gameService.onDestroy(gameId);
+        if (isDestroyed) log.info("Host game {} destroyed", gameId);
     }
 
     /**
@@ -119,53 +148,61 @@ public class GameAggregation {
      * @param connection connection parameters
      */
     public void onClientConnect(Game game, ConnectionSocket connection) {
-        log.info("Player {} connected in game {}", connection.getSessionId(), connection.getGameCode());
+        log.info("Player {} connected in game {}", connection.getSessionId(), game.getId());
 
-        Player player = playerService.onPlayerConnect(game, connection);
+        Player player = playerService.onPlayerConnect(connection, game.getId());
+        Match match = matchService.getMatchOrNull(game.getCurrentMatchId());
 
-        broadcast(BroadcastEnum.WELCOME, player.getSessionId(), player);
-        broadcast(BroadcastEnum.UPDATE_GAME, connection.getSessionId(), game);
-        broadcastHost(BroadcastEnum.PLAYER_NEW, game, player.toDTO());
+        // Notify player
+        broadcast(BroadcastEnum.WELCOME, connection.getSessionId(), player);
+        broadcast(BroadcastEnum.GAME_UPDATE, connection.getSessionId(), game);
+        broadcast(BroadcastEnum.MATCH_UPDATE, connection.getSessionId(), match);
+        // Notify host
+        broadcast(BroadcastEnum.PLAYER_NEW, game.getSessionId(), player.toDTO());
     }
 
     public void onClientReconnect(Game game, Player player, ConnectionSocket connection) {
-        log.info("Player {} reconnected in game {}", connection.getSessionId(), connection.getGameCode());
+        log.info("Player {} reconnected in game {}", connection.getSessionId(), game.getId());
 
-        playerService.onPlayerReconnect(game, player, connection);
+        playerService.onPlayerReconnect(player, connection, game.getId());
+        Match match = matchService.getMatchOrNull(game.getCurrentMatchId());
 
+        // Notify player
         broadcast(BroadcastEnum.WELCOME, connection.getSessionId(), player);
-        broadcast(BroadcastEnum.UPDATE_GAME, connection.getSessionId(), game);
-        broadcastHost(BroadcastEnum.PLAYER_UPDATE, game, player.toDTO());
+        broadcast(BroadcastEnum.GAME_UPDATE, connection.getSessionId(), game);
+        broadcast(BroadcastEnum.MATCH_UPDATE, connection.getSessionId(), match);
+        // Notify host
+        broadcast(BroadcastEnum.PLAYER_UPDATE, game.getSessionId(), player.toDTO());
     }
 
     public void onClientDisconnect(Game game, Player player) {
         playerService.onPlayerDisconnect(player);
 
         scheduleService.executeAfterDelay(() -> onClientDestroy(game, player.getId()), 30);
-        broadcastHost(BroadcastEnum.PLAYER_UPDATE, game, player.toDTO());
+        broadcast(BroadcastEnum.PLAYER_UPDATE, game.getSessionId(), player.toDTO());
     }
 
     private void onClientDestroy(Game game, String playerId) {
         try {
-            Player player = getPlayerOrException(game, playerId);
+            Player player = getPlayerOrException(playerId);
             if (player.isConnected()) return;
 
             playerService.onPlayerDestroy(game, player);
-            broadcastHost(BroadcastEnum.PLAYER_REMOVE, game, player.toDTO());
-            log.info("Player {} destroyed from game {}", player.getSessionId(), game.getCode());
+            broadcast(BroadcastEnum.PLAYER_REMOVE, game.getSessionId(), player.toDTO());
+            log.info("Player {} destroyed from game {}", player.getSessionId(), game.getId());
 
-            Optional<Player> optVip = playerService.getNextVipPlayer(game);
+            Optional<Player> optVip = playerService.getNextVipPlayer(game.getId());
             optVip.ifPresent(vip -> {
-                log.info("Player {} is the new VIP in game {}", player.getSessionId(), game.getCode());
+                log.info("Player {} is the new VIP in game {}", player.getSessionId(), game.getId());
 
                 vip.setVip(true);
                 playerService.save(vip);
 
                 broadcast(BroadcastEnum.PLAYER_UPDATE, vip.getSessionId(), vip.toDTO());
-                broadcastHost(BroadcastEnum.PLAYER_UPDATE, game, vip.toDTO());
+                broadcast(BroadcastEnum.PLAYER_UPDATE, game.getSessionId(), vip.toDTO());
             });
         } catch (Exception ex) {
-            log.error("An error occurred while processing client {} destroy event in game {}: {}", playerId, game.getCode(), ex.getMessage());
+            log.error("An error occurred while processing client {} destroy event in game {}: {}", playerId, game.getId(), ex.getMessage());
         }
     }
 
@@ -173,116 +210,97 @@ public class GameAggregation {
         playerService.onPlayerUpdateAvatar(player, avatar);
     }
 
-    public void onNumberOfRoundsChange(Game game, Integer numberOfRounds) {
-        game.setNumberOfSongs(numberOfRounds);
-        gameService.save(game);
+    public void onNumberOfRoundsChange(Game game, Match match, Integer numberOfRounds) {
+        matchService.onNumberOfRoundsChange(match, numberOfRounds);
 
-        broadcastAll(BroadcastEnum.UPDATE_GAME, game, game);
+        broadcastAll(BroadcastEnum.MATCH_UPDATE, game, match);
     }
 
-    public void onRoundDurationChange(Game game, Integer roundDuration) {
-        game.setRoundDuration(roundDuration);
-        gameService.save(game);
+    public void onRoundDurationChange(Game game, Match match, Integer roundDuration) {
+        matchService.onRoundDurationChange(match, roundDuration);
 
-        broadcastAll(BroadcastEnum.UPDATE_GAME, game, game);
+        broadcastAll(BroadcastEnum.MATCH_UPDATE, game, match);
     }
 
-    public void onPlaylistChange(Game game, Playlist playlist) {
-        game.setPlaylist(playlist);
-        gameService.save(game);
+    public void onPlaylistChange(Game game, Match match, String playlistId) {
+        matchService.onPlaylistChange(match, playlistId);
 
-        broadcastAll(BroadcastEnum.UPDATE_GAME, game, game);
+        broadcastAll(BroadcastEnum.MATCH_UPDATE, game, match);
     }
 
-    public void onStartGame(Game game, RequestStartParams request) {
-        // Generate questions and save them to the game
-        questionService.createAndSaveQuestions(game, request);
+    public void onGameStart(Game game, Match match, RequestStartParams request) {
+        log.debug("Game '{}' started", game.getId());
 
-        gameService.onGameStart(game);
+        List<String> rounds = roundService.createAndSaveRounds(match, request);
+        matchService.onStart(match, rounds);
+        gameService.onStart(game);
 
-        // Send 'START_GAME' event to host and dispatch 'PRE_ROUND' event to rabbit
-        sendEventToRabbit(Event.instanceRoundPreLiveEvent(game.getCode()));
-        broadcastAll(BroadcastEnum.UPDATE_GAME, game, game);
-        log.debug("Game '{}' started", game.getCode());
+        sendEventToRabbit(Event.instanceRoundPreLiveEvent(game.getId()));
+        broadcastAll(BroadcastEnum.GAME_UPDATE, game, game);
     }
 
-    public void onResetGame(Game game) {
-        game.reset();
-        gameService.save(game);
+    public void onGameFinish(Game game, Match match) {
+        matchService.onFinish(match);
+        gameService.onFinish(game);
 
-        broadcastAll(BroadcastEnum.UPDATE_GAME, game, game);
+        notifyGameResults(game, match);
+        broadcastAll(BroadcastEnum.GAME_UPDATE, game, game);
+        broadcastAll(BroadcastEnum.MATCH_UPDATE, game, match);
     }
 
-    public void onPreStartRound(Game game) {
-        log.debug("Round is about to start in game '{}'", game.getCode());
+    public void onGameReset(Game game, Match match) {
+        Match other = matchService.onReset(match, game.getId());
+        gameService.onReset(game, other.getId());
 
-        // Get round question
-        Question question = questionService.getNextRoundInGame(game);
-
-        // Create Round instance
-        Round round = new Round(question);
-        game.setCurrentRound(round);
-        gameService.save(game);
-
-        broadcastAll(BroadcastEnum.UPDATE_ROUND, game, round.toLiveRound());
-        sendDelayedEventToRabbit(Event.instanceRoundLiveEvent(game.getCode(), round), Constants.ROUND_LIVE_DELAY);
+        broadcastAll(BroadcastEnum.GAME_UPDATE, game, game);
+        broadcastAll(BroadcastEnum.MATCH_UPDATE, game, other);
     }
 
-    public void onStartRound(Game game) {
-        log.debug("Round LIVE in game '{}'", game.getCode());
+    public void onRoundPreLive(Game game, Match match) {
+        log.debug("Round is about to start in game '{}'", game.getId());
 
-        Round round = game.getCurrentRound();
-        round.setStartedAt(System.currentTimeMillis());
-        round.setState(RoundStateEnum.LIVE);
+        matchService.onPreLive(match);
+        Round round = roundService.onPreLive(match.getCurrentRoundId());
 
-        gameService.save(game);
-
-        broadcastAll(BroadcastEnum.UPDATE_ROUND, game, round.toLiveRound());
-        sendDelayedEventToRabbit(Event.instanceRoundFinishEvent(game.getCode(), round), game.getRoundDuration());
+        broadcastAll(BroadcastEnum.ROUND_UPDATE, game, round.toLiveRound());
+        sendDelayedEventToRabbit(Event.instanceRoundLiveEvent(game.getId(), round), Constants.ROUND_LIVE_DELAY);
     }
 
-    public void onFinishRound(Game game) {
-        log.debug("Round finished in game '{}'", game.getCode());
+    public void onRoundLive(Game game, Match match) {
+        log.debug("Round LIVE in game '{}'", game.getId());
 
-        Round round = game.getCurrentRound();
-        round.setState(RoundStateEnum.FINISHED);
+        Round round = roundService.onLive(match.getCurrentRoundId());
 
-        gameService.save(game);
-
-        broadcastAll(BroadcastEnum.UPDATE_ROUND, game, round.toFinishedRound());
-        // Notify each client with your round result
-        notifyRoundResult(game, round);
-
-        sendDelayedEventToRabbit(Event.instanceRoundSummaryEvent(game.getCode(), round), 3);
+        broadcastAll(BroadcastEnum.ROUND_UPDATE, game, round.toLiveRound());
+        sendDelayedEventToRabbit(Event.instanceRoundFinishEvent(game.getId(), round), match.getRoundDuration());
     }
 
-    public void onSummaryRound(Game game) {
-        log.debug("Showing results in game '{}'", game.getCode());
+    public void onRoundFinish(Game game, Match match) {
+        log.debug("Round finished in game '{}'", game.getId());
 
-        Round round = game.getCurrentRound();
-        round.setState(RoundStateEnum.SUMMARY);
+        Round round = roundService.onFinish(match.getCurrentRoundId());
 
-        gameService.save(game);
+        notifyRoundResults(game, round);
+        broadcastAll(BroadcastEnum.ROUND_UPDATE, game, round.toFinishedRound());
+        sendDelayedEventToRabbit(Event.instanceRoundSummaryEvent(game.getId(), round), 3);
+    }
+
+    public void onRoundSummary(Game game, Match match) {
+        log.debug("Showing results in game '{}'", game.getId());
+
+        Round round = roundService.onSummary(match.getCurrentRoundId());
 
         // Update round to all clients and host
-        broadcastAll(BroadcastEnum.UPDATE_ROUND, game, round.toSummaryRound());
+        broadcastAll(BroadcastEnum.ROUND_UPDATE, game, round.toSummaryRound());
 
-        Event event = game.isLastRound() ? Event.instanceGameFinishedEvent(game.getCode()) : Event.instanceRoundPreLiveEvent(game.getCode());
+        Event event = match.isLastRound() ? Event.instanceGameFinishedEvent(game.getId()) : Event.instanceRoundPreLiveEvent(game.getId());
         sendDelayedEventToRabbit(event, Constants.ROUND_FINISH_DELAY);
     }
 
-    public void onFinishGame(Game game) {
-        game.setState(GameStateEnum.FINISHED);
-        game.setCurrentRound(null);
-        gameService.save(game);
+    public void onClientAnswer(Game game, Match match, Player player, String answerId) {
+        Round round = roundService.getRound(match.getCurrentRoundId());
+        if (Objects.isNull(round) || !round.isLive()) return;
 
-        questionService.remove(game);
-
-        broadcastAll(BroadcastEnum.UPDATE_GAME, game, game);
-    }
-
-    public void onClientAnswer(Game game, Player player, String answerId) {
-        Round round = game.getCurrentRound();
         Song answer = round.getAnswer();
 
         int points = 0;
@@ -291,7 +309,7 @@ public class GameAggregation {
         if (correctAnswer) {
             Long answeredAt = System.currentTimeMillis();
             guessTime = answeredAt - round.getStartedAt();
-            float ratioPoints = Constants.MAX_POINTS / (game.getRoundDuration() * 1000F);
+            float ratioPoints = Constants.MAX_POINTS / (match.getRoundDuration() * 1000F);
             Integer lostPoints = Math.round(ratioPoints * guessTime);
             points = Constants.MAX_POINTS - lostPoints;
 
@@ -301,40 +319,60 @@ public class GameAggregation {
         }
         log.debug("Player {}[{}] answer correct? {} and earn {} points", player.getName(), player.getId(), correctAnswer, points);
 
-        RoundResult result = new RoundResult();
-        result.setRound(round.getId());
-        result.setPlayerId(player.getId());
-        result.setCorrect(correctAnswer);
-        result.setPoints(points);
-        result.setGuessTime(guessTime);
-
-        resultService.saveResult(game, round, result);
+        resultService.onAnswer(round.getId(), player.getId(), correctAnswer, points, guessTime);
     }
 
-    private void notifyRoundResult(Game game, Round round) {
-        List<Player> players = playerService.getPlayers(game);
+    private void notifyRoundResults(Game game, Round round) {
+        List<RoundResult> results = getRoundResult(round.getId());
+        notifyRoundResultsToPlayer(game.getId(), results); // Notify each client with your round result
+        notifyRoundResultsToHost(game, results); // Notify host with your round result
+    }
+
+    private void notifyRoundResultsToPlayer(String gameId, List<RoundResult> results) {
+        List<Player> players = playerService.getPlayers(gameId);
         for (Player player : players) {
-            RoundResult result = resultService.getResultByRoundAndPlayer(game.getCode(), round.getId(), player.getId());
-            ClientAnswerResponse response = Objects.isNull(result) ? new ClientAnswerResponse(player.getId(), false, 0) : new ClientAnswerResponse(player.getId(), result.isCorrect(), result.getPoints());
-            broadcast(BroadcastEnum.PLAYER_ANSWER, player.getSessionId(), response);
+            Optional<RoundResult> result = results.stream().filter(r -> player.getId().equals(r.getPlayerId())).findFirst();
+            broadcast(BroadcastEnum.ROUND_RESULT, player.getSessionId(), result.orElse(new RoundResult(player.getId())));
         }
+    }
+
+    private void notifyRoundResultsToHost(Game game, List<RoundResult> results) {
+        broadcast(BroadcastEnum.ROUND_RESULT, game.getSessionId(), results);
+    }
+
+    private void notifyGameResults(Game game, Match match) {
+        List<MatchResult> results = getMatchResult(match.getRounds());
+        notifyGameResultsToPlayers(game.getId(), results);
+        notifyGameResultsToHost(game, results);
+    }
+
+    private void notifyGameResultsToPlayers(String gameId, List<MatchResult> results) {
+        List<Player> players = playerService.getPlayers(gameId);
+        for (MatchResult result : results) {
+            Player player = players.stream().filter(p -> p.getId().equals(result.getPlayerId())).findFirst().orElse(null);
+            broadcast(BroadcastEnum.ROUND_RESULT, player.getSessionId(), result);
+        }
+//        for (Player player : players) {
+//            Optional<MatchResult> playerResult = results.stream().filter(result -> player.getId().equals(result.getPlayerId())).findFirst();
+//            broadcast(BroadcastEnum.MATCH_RESULT, player.getSessionId(), playerResult.orElse(new MatchResult(player.getId())));
+//        }
+    }
+
+    private void notifyGameResultsToHost(Game game, List<MatchResult> results) {
+        broadcast(BroadcastEnum.MATCH_RESULT, game.getSessionId(), results);
     }
 
     private void broadcast(BroadcastEnum context, String sessionId, Object object) {
         socketService.broadcast(context, sessionId, object);
     }
 
-    private void broadcastHost(BroadcastEnum context, Game game, Object player) {
-        socketService.broadcast(context, game.getSessionId(), player);
-    }
-
-    private void broadcastPlayers(BroadcastEnum context, Game game, Object object) {
-        List<Player> players = playerService.getPlayers(game);
+    private void broadcastPlayers(BroadcastEnum context, String gameId, Object object) {
+        List<Player> players = playerService.getPlayers(gameId);
         players.forEach(player -> socketService.broadcast(context, player.getSessionId(), object));
     }
 
     private void broadcastAll(BroadcastEnum context, Game game, Object object) {
-        broadcastPlayers(context, game, object);
-        broadcastHost(context, game, object);
+        broadcastPlayers(context, game.getId(), object);
+        broadcast(context, game.getSessionId(), object);
     }
 }

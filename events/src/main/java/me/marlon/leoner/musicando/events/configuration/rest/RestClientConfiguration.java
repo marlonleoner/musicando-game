@@ -14,7 +14,6 @@ public class RestClientConfiguration {
         return getBaseBuilder().build();
     }
 
-
     private RestClient.Builder getBaseBuilder() {
         BufferingClientHttpRequestFactory factory = new BufferingClientHttpRequestFactory(new HttpComponentsClientHttpRequestFactory());
         return RestClient.builder().requestFactory(factory);
