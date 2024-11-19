@@ -30,6 +30,7 @@ public class QuestionAggregation {
         }
 
         List<Song> songs = new ArrayList<>(playlist.getSongs());
+        Collections.shuffle(songs);
         return IntStream.range(0, params.getAmount()).mapToObj(i -> {
             Song answer = songs.remove(i);
 

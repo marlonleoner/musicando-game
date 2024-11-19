@@ -1,42 +1,59 @@
 import { useCallback, useContext } from "react";
+import { FaCrosshairs, FaCrown, FaStopwatch } from "react-icons/fa6";
 import { GameContext } from "../context/GameContext";
+import Avatar from "./Avatar";
+import ConfettiContainer from "./Confetti";
 
 const GameOver = () => {
     const { players, matchResult } = useContext(GameContext);
 
-    const findResult = useCallback(
+    const findPlayer = useCallback(
         (playerId: string) => {
-            return matchResult.find((result) => result.playerId === playerId);
+            return players.find((player) => player.id === playerId);
         },
         [players]
     );
 
     return (
         <div className="w-full h-full flex flex-col items-center mt-8">
-            {/* <pre>matchResult: {JSON.stringify(matchResult, null, 4)}</pre>
-            <pre>players: {JSON.stringify(players, null, 4)}</pre> */}
-            <div className="w-[752px] uppercase">
-                <div className="h-14 flex items-center justify-between bg-primary rounded-md">
-                    <div className="pl-24">Jogador</div>
-                    <div className="w-28 text-center">Pontos</div>
+            <ConfettiContainer />
+            <div className="w-[752px]">
+                <div className="h-14 flex items-center justify-center bg-primary rounded-md font-black text-2xl uppercase">
+                    Resultado Final
                 </div>
                 <ul className="flex flex-col gap-2 mt-4 overflow-y-auto">
-                    {players.map((player, position) => {
-                        const result = findResult(player.id);
+                    {matchResult.map((result, position) => {
+                        const player = findPlayer(result.playerId);
+                        const avgTime = (result.totalGuessTime / (1000 * result.correctAnswers)).toFixed(2);
 
                         return (
                             <li
                                 key={player.id}
-                                className="w-full h-14 flex items-center justify-between bg-primary rounded-md"
+                                className="w-full h-20 px-8 flex items-center justify-between bg-primary rounded-md uppercase"
                             >
                                 <div className="flex items-center">
-                                    <span className="px-8 text-2xl font-black">
+                                    <span className="pr-4 text-2xl font-black">
                                         {String(position + 1).padStart(2, "0")}
                                     </span>
+                                    <Avatar avatar={player.avatar} className="w-14 h-14 rounded-3xl" />
                                     <span className="text-lg font-semibold">{player.name}</span>
                                 </div>
-                                <div className="w-28 text-center text-2xl font-black">
-                                    {result ? result.totalPoints : 0}
+                                <div className="flex">
+                                    <div className="max-w-32 min-w-32 flex items-baseline">
+                                        <FaStopwatch className="mr-2" size={16} color="#F8D34D" />
+                                        <span className="text-xl font-black">{avgTime}</span>
+                                        <span className="text-sm opacity-70">seg</span>
+                                    </div>
+                                    <div className="max-w-32 min-w-32 text-center flex items-baseline">
+                                        <FaCrosshairs className="mr-2" size={16} color="#F8D34D" />
+                                        <span className="text-xl font-black">{result.correctAnswers}</span>
+                                        <span className="text-sm opacity-70">acertos</span>
+                                    </div>
+                                    <div className="max-w-32 min-w-32 text-center flex items-baseline">
+                                        <FaCrown className="mr-2" size={16} color="#F8D34D" />
+                                        <span className="text-xl font-black">{result.totalPoints}</span>
+                                        <span className="text-sm opacity-70">pontos</span>
+                                    </div>
                                 </div>
                             </li>
                         );

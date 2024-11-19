@@ -1,19 +1,9 @@
-import { useContext, useMemo } from "react";
+import { useContext } from "react";
 import { GameContext } from "../../context/GameContext";
+import Avatar from "../Avatar";
 
 const Lobby = () => {
     const { match, players } = useContext(GameContext);
-
-    const avatar = useMemo(
-        () => (
-            <img
-                className="w-24 h-24 rounded-full"
-                src="https://avataaars.io/?avatarStyle=Transparent&topType=ShortHairTheCaesar&accessoriesType=Blank&hairColor=Brown&facialHairType=Blank&clotheType=ShirtCrewNeck&clotheColor=Gray01&eyeType=Default&eyebrowType=Default&mouthType=Twinkle&skinColor=Brown"
-                alt="Avatar"
-            />
-        ),
-        []
-    );
 
     return (
         <div className="max-w-4xl h-full m-auto flex flex-col items-center justify-center gap-8">
@@ -27,12 +17,14 @@ const Lobby = () => {
                                         ${player.vip && "border-yellow-500"}
                                         ${!player.connected && "opacity-35"}`}
                                 >
-                                    {avatar}
+                                    <Avatar avatar={player.avatar} className="w-24 h-24 rounded-full" />
                                 </div>
                                 <span className="text-xs">{player.name}</span>
                             </>
                         ) : (
-                            <div className="w-24 h-24 flex items-center justify-center opacity-30">{avatar}</div>
+                            <div className="w-24 h-24 flex items-center justify-center opacity-30">
+                                <Avatar className="w-24 h-24 rounded-full" />
+                            </div>
                         )}
                     </div>
                 ))}

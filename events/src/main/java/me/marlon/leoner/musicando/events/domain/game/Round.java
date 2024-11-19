@@ -47,7 +47,8 @@ public class Round {
 
     public RoundDTO toLiveRound() {
         RoundDTO dto = new RoundDTO();
-        dto.setId(roundNumber);
+        dto.setId(id);
+        dto.setRoundNumber(roundNumber);
         dto.setState(state);
         dto.setPreview(answer.getPreview());
         dto.setAlternatives(alternatives.stream().map(Song::toDTO).toList());
@@ -57,7 +58,8 @@ public class Round {
 
     public RoundDTO toFinishedRound() {
         RoundDTO dto = new RoundDTO();
-        dto.setId(roundNumber);
+        dto.setId(id);
+        dto.setRoundNumber(roundNumber);
         dto.setState(state);
         dto.setAnswer(answer.toDTO());
         dto.setAlternatives(alternatives.stream().map(Song::toDTO).toList());
@@ -67,7 +69,8 @@ public class Round {
 
     public RoundDTO toSummaryRound() {
         RoundDTO dto = new RoundDTO();
-        dto.setId(roundNumber);
+        dto.setId(id);
+        dto.setRoundNumber(roundNumber);
         dto.setState(state);
         dto.setAnswer(answer.toDTO());
 

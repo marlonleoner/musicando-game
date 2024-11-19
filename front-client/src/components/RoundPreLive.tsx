@@ -4,7 +4,7 @@ interface IRoundPreLiveProps {
 
 const RoundPreLive = ({ round }: IRoundPreLiveProps) => {
     return (
-        <div className="h-full flex items-center justify-center text-center">
+        <div className="mt-4 flex justify-center text-center">
             <span className="text-lg tracking-tighter">Prepare-se, a rodada {round} vai começar!</span>
         </div>
     );

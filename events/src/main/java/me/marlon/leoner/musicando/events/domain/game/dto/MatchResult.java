@@ -16,11 +16,4 @@ public class MatchResult {
     private Integer correctAnswers;
 
     private Long totalGuessTime;
-
-    public MatchResult(String playerId) {
-        this.playerId = playerId;
-        this.totalPoints = 0;
-        this.correctAnswers = 0;
-        this.totalGuessTime = 0L;
-    }
 }

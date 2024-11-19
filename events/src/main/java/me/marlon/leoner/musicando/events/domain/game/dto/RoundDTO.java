@@ -10,7 +10,9 @@ import java.util.List;
 @NoArgsConstructor
 public class RoundDTO {
 
-    private Integer id;
+    private String id;
+
+    private Integer roundNumber;
 
     private RoundStateEnum state;
 

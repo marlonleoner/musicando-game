@@ -22,7 +22,7 @@ public class Player {
 
     private String name;
 
-    private String avatar;
+    private Avatar avatar;
 
     private boolean connected;
 
@@ -58,6 +58,7 @@ public class Player {
         PlayerDTO dto = new PlayerDTO();
         dto.setId(id);
         dto.setName(name);
+        dto.setAvatar(avatar);
         dto.setConnected(connected);
         dto.setVip(vip);
 

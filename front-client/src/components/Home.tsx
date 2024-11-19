@@ -3,6 +3,7 @@ import { FaRotateRight } from "react-icons/fa6";
 import { GameContext } from "../context/GameContext";
 import { useAvatar } from "../hooks/useFetch";
 import { useGameCheck } from "../hooks/useGameCheck";
+import Avatar from "./Avatar";
 import Input from "./lobby/Input";
 
 const Home = () => {
@@ -57,7 +58,7 @@ const Home = () => {
                 {isLoading ? (
                     <FaRotateRight color="black" size={64} />
                 ) : (
-                    <img src={avatar} alt="Avatar" className="rounded-full w-60 h-60" />
+                    <Avatar avatar={avatar} className="rounded-full w-60 h-60" />
                 )}
                 <button
                     type="button"

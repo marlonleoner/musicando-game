@@ -7,10 +7,11 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface RoundResultRepository extends MongoRepository<RoundResult, String> {
 
-    RoundResult findByRoundIdAndPlayerId(String roundId, String playerId);
+    Optional<RoundResult> findByRoundIdAndPlayerId(String roundId, String playerId);
 
     List<RoundResult> findAllByRoundId(String roundId);
 
@@ -18,9 +19,10 @@ public interface RoundResultRepository extends MongoRepository<RoundResult, Stri
     List<RoundResult> findAllByIds(List<String> ids);
 
     @Aggregation(pipeline = {
-            "{ $match: { roundId: { '$in': ?0 } } }",
+            "{ $match: { roundId: { '$in': ?0 }, correct: true } }",
             "{ $group: { _id: { playerId: '$playerId' }, correctAnswers: { $sum: 1 }, totalPoints: { $sum: '$points' }, totalGuessTime: { $sum: '$guessTime' } } }",
-            "{ $project: { _id: 0, playerId: '$_id.playerId', totalPoints: 1, totalGuessTime: 2, correctAnswers: 3 } }"
+            "{ $setWindowFields:  { sortBy: { totalPoints: -1 }, output: { position: { $denseRank: {} } } } }",
+            "{ $project: { _id: 0, playerId: '$_id.playerId', totalPoints: 1, totalGuessTime: 2, correctAnswers: 3, position: 4 } }"
     })
     List<MatchResult> findMatchResult(List<String> rounds);
 }

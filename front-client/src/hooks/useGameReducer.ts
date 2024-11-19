@@ -1,4 +1,4 @@
-import { BroadcastEvent, RoundState } from "../types/enums";
+import { BroadcastEvent, MatchState } from "../types/enums";
 import { IGameContext } from "../types/types";
 
 interface IPayloadEvent {
@@ -29,6 +29,8 @@ const onMatchUpdate = (state: IGameContext, object: any) => {
     return {
         ...state,
         match: object,
+        results: object.state === MatchState.PREPARING ? [] : state.results,
+        matchResult: object.state === MatchState.PREPARING ? null : state.matchResult,
     };
 };
 
@@ -43,14 +45,15 @@ const onRoundUpdate = (state: IGameContext, object: any) => {
     return {
         ...state,
         round: object,
-        roundResult: object.state === RoundState.PRE_LIVE ? null : state.roundResult,
     };
 };
 
 const onRoundResult = (state: IGameContext, object: any) => {
+    const { results } = state;
+
     return {
         ...state,
-        roundResult: object,
+        results: [...results, object],
     };
 };
 

@@ -23,7 +23,6 @@ public enum EventTypeEnum {
     GAME_FINISH("game/finish", GameFinishHandler.class),
     // ClientEvents
     CLIENT_SEND_ANSWER("client/send-answer", ClientAnswerHandler.class),
-    CLIENT_UPDATE_AVATAR("client/update-avatar", ClientUpdateAvatar.class),
     // VipEvents
     VIP_CHANGE_AMOUNT("vip/number-rounds", VipNumberOfRoundsHandler.class),
     VIP_CHANGE_TIMER("vip/round-duration", VipRoundDurationHandler.class),

@@ -4,25 +4,25 @@ import { IAlternative } from "../types/types";
 
 interface AlternativeProps {
     alternative: IAlternative;
-    correctAnswer?: boolean;
+    correct?: boolean;
 }
 
-const Alternative = ({ alternative, correctAnswer }: AlternativeProps) => {
+const Alternative = ({ alternative, correct }: AlternativeProps) => {
     const label = useMemo(() => {
-        if (correctAnswer === null || correctAnswer === undefined) {
+        if (correct === null || correct === undefined) {
             return "Selecionou";
         }
 
-        return correctAnswer ? "Acertou" : "Errou";
-    }, [correctAnswer]);
+        return correct ? "Acertou" : "Errou";
+    }, [correct]);
 
     const bg = useMemo(() => {
-        if (correctAnswer === null || correctAnswer === undefined) {
-            return "#000000";
+        if (correct === null || correct === undefined) {
+            return "#180E2B";
         }
 
-        return correctAnswer ? "#15803d" : "#b91c1c";
-    }, [correctAnswer]);
+        return correct ? "#15803d" : "#b91c1c";
+    }, [correct]);
 
     return (
         <motion.div

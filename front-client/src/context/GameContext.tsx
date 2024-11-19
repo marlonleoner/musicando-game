@@ -2,7 +2,7 @@ import { createContext, useReducer } from "react";
 import { useGameReducer } from "../hooks/useGameReducer";
 import { useSocket } from "../hooks/useSocket";
 import { EventType } from "../types/enums";
-import { Element, IGameContext, IPlaylist, Reducer } from "../types/types";
+import { Element, IAvatar, IGameContext, IPlaylist, Reducer } from "../types/types";
 
 const initialGameContext: IGameContext = {
     connectClient: () => {},
@@ -13,6 +13,7 @@ const initialGameContext: IGameContext = {
     startGame: () => {},
     resetGame: () => {},
     sendAnswer: () => {},
+    results: [],
 };
 
 export const GameContext = createContext<IGameContext>(null as IGameContext);
@@ -36,11 +37,11 @@ export const GameProvider = ({ children }: Element) => {
 
     const { connect, sendMessage } = useSocket(onOpenHandle, onCloseHandle, onMessageHandle);
 
-    const connectClient = (code: string, user: string, avatar: string) => {
+    const connectClient = (code: string, user: string, avatar: IAvatar) => {
         connect({
             code,
             username: user,
-            avatar: encodeURIComponent(avatar),
+            avatar,
         });
     };
 

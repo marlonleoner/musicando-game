@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
+import { IAvatar } from "../types/types";
 
 interface IConnect {
     code: string;
     username?: string;
-    avatar?: string;
+    avatar?: IAvatar;
     id?: string;
     secret?: string;
 }
@@ -15,11 +16,14 @@ export const useSocket = (
 ) => {
     const [socket, setSocket] = useState(null as WebSocket);
 
+    const avatarParams = (avatar: IAvatar) =>
+        Object.keys(avatar)
+            .map((key) => `${key}=${avatar[key]}`)
+            .join("&");
+
     const connect = useCallback(
         ({ code, username, avatar, id, secret }: IConnect) => {
-            console.log(avatar);
-
-            const q = id && secret ? `id=${id}&secret=${secret}&` : `name=${username}&avatar=${avatar}&`;
+            const q = id && secret ? `id=${id}&secret=${secret}&` : `name=${username}&${avatarParams(avatar)}&`;
             const ws = new WebSocket(`ws://192.168.0.111:7777/musicando/${code}?${q}role=client`);
             ws.addEventListener("open", onOpen);
             ws.addEventListener("close", onClose);

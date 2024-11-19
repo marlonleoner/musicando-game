@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,16 +20,12 @@ public class ResultService {
         return repository.save(result);
     }
 
-    public RoundResult findByRoundIdAndPlayerId(String roundId, String playerId) {
+    public Optional<RoundResult> findByRoundIdAndPlayerId(String roundId, String playerId) {
         return repository.findByRoundIdAndPlayerId(roundId, playerId);
     }
 
-    public List<RoundResult> findAllByRoundId(String id) {
-        return repository.findAllByRoundId(id);
-    }
-
-    public List<RoundResult> findAllByIds(List<String> ids) {
-        return repository.findAllByIds(ids);
+    public List<RoundResult> findAllByRoundId(String roundId) {
+        return repository.findAllByRoundId(roundId);
     }
 
     public void onAnswer(String roundId, String playerId, boolean isCorrect, Integer points, Long guessTime) {
@@ -50,5 +47,14 @@ public class ResultService {
 
     public List<MatchResult> getOrderedMatchResult(List<String> roundsId) {
         return repository.findMatchResult(roundsId);
+    }
+
+    public RoundResult onRoundResult(String roundId, String playerId) {
+        Optional<RoundResult> result = findByRoundIdAndPlayerId(roundId, playerId);
+        return result.orElseGet(() -> save(new RoundResult(roundId, playerId)));
+    }
+
+    public List<MatchResult> onMatchResult(List<String> rounds) {
+        return getOrderedMatchResult(rounds);
     }
 }

@@ -19,7 +19,8 @@ public class RoundResult {
 
     private Long guessTime;
 
-    public RoundResult(String playerId) {
+    public RoundResult(String roundId, String playerId) {
+        this.roundId = roundId;
         this.playerId = playerId;
         this.correct = false;
         this.points = 0;

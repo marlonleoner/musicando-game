@@ -3,6 +3,7 @@ package me.marlon.leoner.musicando.events.domain.game.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.marlon.leoner.musicando.events.domain.game.Avatar;
 
 @Data
 @NoArgsConstructor
@@ -16,4 +17,6 @@ public class PlayerDTO {
     private boolean connected;
 
     private boolean vip;
+
+    private Avatar avatar;
 }

@@ -51,10 +51,25 @@ export interface IRound {
 export interface IPlayers {
     id: string;
     name: string;
+    avatar: IAvatar;
     vip: boolean;
     connected: boolean;
     points?: number;
     roundPoints?: number;
+}
+
+export interface IAvatar {
+    style: string;
+    accessories: string;
+    facialHair: string;
+    eye: string;
+    eyebrow: string;
+    mouth: string;
+    top: string;
+    hairColor: string;
+    clothe: string;
+    clotheColor: string;
+    skinColor: string;
 }
 
 export interface IAlternative {
@@ -75,7 +90,7 @@ export interface IRoundResult {
 
 export interface IMatchResult {
     playerId: string;
-    correctAnswers: boolean;
+    correctAnswers: number;
     totalPoints: number;
     totalGuessTime: number;
 }

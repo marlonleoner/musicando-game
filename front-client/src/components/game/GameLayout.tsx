@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { GameContext } from "../../context/GameContext";
 import { RoundState } from "../../types/enums";
 import Alternative from "../Alternative";
@@ -7,20 +7,25 @@ import RoundPreLive from "../RoundPreLive";
 import RoundSummary from "../RoundSummary";
 
 const GameLayout = () => {
-    const { round, roundResult } = useContext(GameContext);
+    const { player, round, results } = useContext(GameContext);
+
+    const roundResult = useMemo(() => {
+        if (!results) return null;
+        return results.find((r) => r.roundId === round.id);
+    }, [round, results]);
 
     return (
         <>
             {(() => {
                 switch (round?.state) {
                     case RoundState.PRE_LIVE:
-                        return <RoundPreLive round={round.id} />;
+                        return <RoundPreLive round={round.roundNumber} />;
                     case RoundState.LIVE:
                         return <RoundLive alternatives={round.alternatives} />;
                     case RoundState.FINISHED:
-                        return <Alternative alternative={round.answer} correctAnswer={roundResult?.correct} />;
+                        return <Alternative alternative={round.answer} correct={roundResult?.correct} />;
                     case RoundState.SUMMARY:
-                        return <RoundSummary answer={round.answer} result={roundResult} />;
+                        return <RoundSummary player={player} result={roundResult} />;
                     default:
                         return <p>State não mapeado</p>;
                 }

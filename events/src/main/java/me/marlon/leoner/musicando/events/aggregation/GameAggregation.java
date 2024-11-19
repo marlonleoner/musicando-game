@@ -7,10 +7,8 @@ import me.marlon.leoner.musicando.events.domain.event.Event;
 import me.marlon.leoner.musicando.events.domain.exception.EventException;
 import me.marlon.leoner.musicando.events.domain.game.*;
 import me.marlon.leoner.musicando.events.domain.game.dto.MatchResult;
-import me.marlon.leoner.musicando.events.domain.params.ClientAnswerResponse;
 import me.marlon.leoner.musicando.events.domain.params.RequestStartParams;
 import me.marlon.leoner.musicando.events.domain.socket.ConnectionSocket;
-import me.marlon.leoner.musicando.events.domain.game.Playlist;
 import me.marlon.leoner.musicando.events.service.*;
 import me.marlon.leoner.musicando.events.utils.Constants;
 import org.springframework.stereotype.Service;
@@ -78,14 +76,6 @@ public class GameAggregation {
         return playlist.orElseThrow(() -> new EventException("no such playlist", true));
     }
 
-    private List<RoundResult> getRoundResult(String roundId) {
-        return resultService.getOrderedRoundResult(roundId);
-    }
-
-    public List<MatchResult> getMatchResult(List<String> roundsId) {
-        return resultService.getOrderedMatchResult(roundsId);
-    }
-
     /**
      * Fires when the host connect to the server
      *
@@ -122,7 +112,7 @@ public class GameAggregation {
     }
 
     private void notifyMatchResultIfFinished(Game game, Match match) {
-        if (!game.isFinished() || !match.isFinished()) return;
+        if (!game.isFinished()) return;
 
         notifyGameResults(game, match);
     }
@@ -204,10 +194,6 @@ public class GameAggregation {
         } catch (Exception ex) {
             log.error("An error occurred while processing client {} destroy event in game {}: {}", playerId, game.getId(), ex.getMessage());
         }
-    }
-
-    public void onClientUpdateAvatar(Player player, String avatar) {
-        playerService.onPlayerUpdateAvatar(player, avatar);
     }
 
     public void onNumberOfRoundsChange(Game game, Match match, Integer numberOfRounds) {
@@ -323,39 +309,35 @@ public class GameAggregation {
     }
 
     private void notifyRoundResults(Game game, Round round) {
-        List<RoundResult> results = getRoundResult(round.getId());
-        notifyRoundResultsToPlayer(game.getId(), results); // Notify each client with your round result
-        notifyRoundResultsToHost(game, results); // Notify host with your round result
+        notifyRoundResultsToPlayer(game.getId(), round.getId()); // Notify each client with your round result
+        notifyRoundResultsToHost(game.getSessionId(), round.getId()); // Notify host with your round result
     }
 
-    private void notifyRoundResultsToPlayer(String gameId, List<RoundResult> results) {
+    private void notifyRoundResultsToPlayer(String gameId, String roundId) {
         List<Player> players = playerService.getPlayers(gameId);
         for (Player player : players) {
-            Optional<RoundResult> result = results.stream().filter(r -> player.getId().equals(r.getPlayerId())).findFirst();
-            broadcast(BroadcastEnum.ROUND_RESULT, player.getSessionId(), result.orElse(new RoundResult(player.getId())));
+            RoundResult result = resultService.onRoundResult(roundId, player.getId());
+            broadcast(BroadcastEnum.ROUND_RESULT, player.getSessionId(), result);
         }
     }
 
-    private void notifyRoundResultsToHost(Game game, List<RoundResult> results) {
-        broadcast(BroadcastEnum.ROUND_RESULT, game.getSessionId(), results);
+    private void notifyRoundResultsToHost(String sessionId, String roundId) {
+        List<RoundResult> results = resultService.getOrderedRoundResult(roundId);
+        broadcast(BroadcastEnum.ROUND_RESULT, sessionId, results);
     }
 
     private void notifyGameResults(Game game, Match match) {
-        List<MatchResult> results = getMatchResult(match.getRounds());
+        List<MatchResult> results = resultService.onMatchResult(match.getRounds());
         notifyGameResultsToPlayers(game.getId(), results);
         notifyGameResultsToHost(game, results);
     }
 
     private void notifyGameResultsToPlayers(String gameId, List<MatchResult> results) {
         List<Player> players = playerService.getPlayers(gameId);
-        for (MatchResult result : results) {
-            Player player = players.stream().filter(p -> p.getId().equals(result.getPlayerId())).findFirst().orElse(null);
-            broadcast(BroadcastEnum.ROUND_RESULT, player.getSessionId(), result);
+        for (Player player : players) {
+            Optional<MatchResult> playerResult = results.stream().filter(result -> player.getId().equals(result.getPlayerId())).findFirst();
+            broadcast(BroadcastEnum.MATCH_RESULT, player.getSessionId(), playerResult.orElse(null));
         }
-//        for (Player player : players) {
-//            Optional<MatchResult> playerResult = results.stream().filter(result -> player.getId().equals(result.getPlayerId())).findFirst();
-//            broadcast(BroadcastEnum.MATCH_RESULT, player.getSessionId(), playerResult.orElse(new MatchResult(player.getId())));
-//        }
     }
 
     private void notifyGameResultsToHost(Game game, List<MatchResult> results) {

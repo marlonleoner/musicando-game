@@ -80,9 +80,4 @@ public class PlayerService {
     public void onPlayerDestroy(Game game, Player player) {
         remove(player);
     }
-
-    public void onPlayerUpdateAvatar(Player player, String avatar) {
-        player.setAvatar(avatar);
-        save(player);
-    }
 }

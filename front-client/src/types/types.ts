@@ -9,7 +9,7 @@ export type FallbackElement = Element & { fallback: () => JSX.Element };
 export type Reducer = (state: IGameContext, action: any) => IGameContext;
 
 export interface IGameContext {
-    connectClient: (code: string, user: string, avatar: string) => void;
+    connectClient: (code: string, user: string, avatar: IAvatar) => void;
     reconnectClient: (code: string, id: string, secret: string) => void;
     changePlaylist: (playlist: IPlaylist) => void;
     changeRoundDuration: (timer: number) => void;
@@ -21,7 +21,7 @@ export interface IGameContext {
     game?: IGame;
     match?: IMatch;
     round?: IRound;
-    roundResult?: IRoundResult;
+    results: IRoundResult[];
     matchResult?: IMatchResult;
 }
 
@@ -29,9 +29,24 @@ export interface IPlayer {
     sessionId?: string;
     id?: string;
     name: string;
-    avatar?: string;
+    avatar?: IAvatar;
     secret?: string;
     vip?: boolean;
+}
+
+export interface IAvatar {
+    [key: string]: string;
+    style: string;
+    accessories: string;
+    facialHair: string;
+    eye: string;
+    eyebrow: string;
+    mouth: string;
+    top: string;
+    hairColor: string;
+    clothe: string;
+    clotheColor: string;
+    skinColor: string;
 }
 
 export interface IGame {
@@ -46,9 +61,9 @@ export interface IMatch {
     state: MatchState;
 }
 
-// private Song answer;
 export interface IRound {
-    id: number;
+    id: string;
+    roundNumber: number;
     state: RoundState;
     preview: string;
     alternatives: IAlternative[];
@@ -81,7 +96,8 @@ export interface IRoundResult {
 
 export interface IMatchResult {
     playerId: string;
-    correctAnswers: boolean;
+    position: number;
+    correctAnswers: number;
     totalPoints: number;
     totalGuessTime: number;
 }
