@@ -32,6 +32,8 @@ services:
       - REDIS_PORT
       - REDIS_USERNAME
       - REDIS_PASSWORD
+      - MONGO_INITDB_ROOT_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD
     ports:
       - "7777:7777"
     links:

@@ -39,19 +39,19 @@ const GameOver = () => {
                                     <span className="text-lg font-semibold">{player.name}</span>
                                 </div>
                                 <div className="flex">
-                                    <div className="max-w-32 min-w-32 flex items-baseline">
+                                    <div className="max-w-32 min-w-32 flex items-baseline tracking-tighter">
                                         <FaStopwatch className="mr-2" size={16} color="#F8D34D" />
-                                        <span className="text-xl font-black">{avgTime}</span>
+                                        <span className="text-2xl font-black">{avgTime}</span>
                                         <span className="text-sm opacity-70">seg</span>
                                     </div>
-                                    <div className="max-w-32 min-w-32 text-center flex items-baseline">
+                                    <div className="max-w-32 min-w-32 flex items-baseline tracking-tighter">
                                         <FaCrosshairs className="mr-2" size={16} color="#F8D34D" />
-                                        <span className="text-xl font-black">{result.correctAnswers}</span>
+                                        <span className="text-2xl font-black">{result.correctAnswers}</span>
                                         <span className="text-sm opacity-70">acertos</span>
                                     </div>
-                                    <div className="max-w-32 min-w-32 text-center flex items-baseline">
+                                    <div className="max-w-32 min-w-32 flex items-baseline tracking-tighter">
                                         <FaCrown className="mr-2" size={16} color="#F8D34D" />
-                                        <span className="text-xl font-black">{result.totalPoints}</span>
+                                        <span className="text-2xl font-black">{result.totalPoints}</span>
                                         <span className="text-sm opacity-70">pontos</span>
                                     </div>
                                 </div>
