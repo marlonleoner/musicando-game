@@ -10,7 +10,7 @@ export const useSocket = (
     const connect = useCallback(
         (roomId: string, secret?: string) => {
             const q = secret ? `id=0&secret=${secret}&` : "";
-            const ws = new WebSocket(`ws://localhost:7777/musicando/${roomId}?${q}role=host`);
+            const ws = new WebSocket(`ws://192.168.0.111:7777/musicando/${roomId}?${q}role=host`);
             ws.addEventListener("open", onOpen);
             ws.addEventListener("close", onClose);
             ws.addEventListener("message", onMessage);

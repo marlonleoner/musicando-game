@@ -7,12 +7,12 @@ const GameOver = () => {
     const { player, match, results, matchResult, resetGame } = useContext(GameContext);
 
     const points = useMemo(() => (matchResult ? matchResult.totalPoints : 0), [matchResult]);
-    const correct = useMemo(() => (matchResult ? matchResult.correctAnswers : 0), [matchResult]);
+    const correct = useMemo(() => (matchResult ? matchResult.totalCorrectAnswers : 0), [matchResult]);
     const averageTime = useMemo(
-        () => (matchResult ? (matchResult.totalGuessTime / (1000 * matchResult.correctAnswers)).toFixed(2) : 0),
+        () => (matchResult ? (matchResult.averageGuessTime / 1000).toFixed(2) : 0),
         [matchResult]
     );
-    const accuracy = useMemo(() => (correct * 100) / match.numberOfSongs, [correct, match]);
+    const accuracy = useMemo(() => (correct * 100) / match?.numberOfSongs, [correct, match]);
     const position = useMemo(() => (matchResult ? matchResult.position : 0), [matchResult]);
 
     return (

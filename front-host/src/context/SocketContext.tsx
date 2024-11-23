@@ -25,9 +25,7 @@ export const SocketProvider = ({ children }: ISocketProviderProps) => {
     const ws = useRef(null);
 
     const connect = (roomId: string) => {
-        const socket = new WebSocket(
-            `ws://localhost:7777/musicando/${roomId}?role=host`
-        );
+        const socket = new WebSocket(`ws://192.168.0.111:7777/musicando/${roomId}?role=host`);
 
         socket.onopen = () => setIsReady(true);
         socket.onclose = () => setIsReady(false);
@@ -47,7 +45,5 @@ export const SocketProvider = ({ children }: ISocketProviderProps) => {
         send: ws.current?.send.bind(ws.current),
     };
 
-    return (
-        <SocketContext.Provider value={ret}>{children}</SocketContext.Provider>
-    );
+    return <SocketContext.Provider value={ret}>{children}</SocketContext.Provider>;
 };

@@ -11,6 +11,7 @@ export type Reducer = (state: IGameContext, action: any) => IGameContext;
 export interface IGameContext {
     connectClient: (code: string, user: string, avatar: IAvatar) => void;
     reconnectClient: (code: string, id: string, secret: string) => void;
+    disconnectClient: () => void;
     changePlaylist: (playlist: IPlaylist) => void;
     changeRoundDuration: (timer: number) => void;
     changeNumberOfRounds: (amount: number) => void;
@@ -97,7 +98,7 @@ export interface IRoundResult {
 export interface IMatchResult {
     playerId: string;
     position: number;
-    correctAnswers: number;
     totalPoints: number;
-    totalGuessTime: number;
+    totalCorrectAnswers: number;
+    averageGuessTime: number;
 }

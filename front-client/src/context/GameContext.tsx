@@ -1,12 +1,13 @@
 import { createContext, useReducer } from "react";
 import { useGameReducer } from "../hooks/useGameReducer";
 import { useSocket } from "../hooks/useSocket";
-import { EventType } from "../types/enums";
+import { BroadcastEvent, EventType } from "../types/enums";
 import { Element, IAvatar, IGameContext, IPlaylist, Reducer } from "../types/types";
 
 const initialGameContext: IGameContext = {
     connectClient: () => {},
     reconnectClient: () => {},
+    disconnectClient: () => {},
     changePlaylist: () => {},
     changeRoundDuration: () => {},
     changeNumberOfRounds: () => {},
@@ -26,6 +27,7 @@ export const GameProvider = ({ children }: Element) => {
     };
 
     const onCloseHandle = () => {
+        dispatch({ type: BroadcastEvent.DISCONNECT });
         console.log("connection closed");
     };
 
@@ -35,7 +37,7 @@ export const GameProvider = ({ children }: Element) => {
         dispatch({ type, object });
     };
 
-    const { connect, sendMessage } = useSocket(onOpenHandle, onCloseHandle, onMessageHandle);
+    const { connect, disconnect, sendMessage } = useSocket(onOpenHandle, onCloseHandle, onMessageHandle);
 
     const connectClient = (code: string, user: string, avatar: IAvatar) => {
         connect({
@@ -51,6 +53,10 @@ export const GameProvider = ({ children }: Element) => {
             id,
             secret,
         });
+    };
+
+    const disconnectClient = () => {
+        disconnect();
     };
 
     const changePlaylist = (playlist: IPlaylist) => {
@@ -99,6 +105,7 @@ export const GameProvider = ({ children }: Element) => {
                 ...state,
                 connectClient,
                 reconnectClient,
+                disconnectClient,
                 changePlaylist,
                 changeRoundDuration,
                 changeNumberOfRounds,

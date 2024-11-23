@@ -2,7 +2,8 @@ package me.marlon.leoner.musicando.events.service;
 
 import lombok.RequiredArgsConstructor;
 import me.marlon.leoner.musicando.events.domain.game.RoundResult;
-import me.marlon.leoner.musicando.events.domain.game.dto.MatchResult;
+import me.marlon.leoner.musicando.events.domain.game.MatchResult;
+import me.marlon.leoner.musicando.events.domain.game.dto.MatchResultDTO;
 import me.marlon.leoner.musicando.events.repository.RoundResultRepository;
 import org.springframework.stereotype.Service;
 
@@ -54,7 +55,16 @@ public class ResultService {
         return result.orElseGet(() -> save(new RoundResult(roundId, playerId)));
     }
 
-    public List<MatchResult> onMatchResult(List<String> rounds) {
-        return getOrderedMatchResult(rounds);
+    public List<MatchResultDTO> onMatchResult(List<String> rounds) {
+        return getOrderedMatchResult(rounds).stream().map(result -> {
+            MatchResultDTO dto = new MatchResultDTO();
+            dto.setPlayerId(result.getPlayerId());
+            dto.setPosition(result.getPosition());
+            dto.setTotalPoints(result.getTotalPoints());
+            dto.setTotalCorrectAnswers(result.getCorrectAnswers());
+            dto.setAverageGuessTime(result.getTotalGuessTime() / rounds.size());
+
+            return dto;
+        }).toList();
     }
 }

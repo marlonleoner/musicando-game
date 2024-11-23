@@ -6,7 +6,7 @@ import me.marlon.leoner.musicando.events.domain.event.BroadcastEnum;
 import me.marlon.leoner.musicando.events.domain.event.Event;
 import me.marlon.leoner.musicando.events.domain.exception.EventException;
 import me.marlon.leoner.musicando.events.domain.game.*;
-import me.marlon.leoner.musicando.events.domain.game.dto.MatchResult;
+import me.marlon.leoner.musicando.events.domain.game.dto.MatchResultDTO;
 import me.marlon.leoner.musicando.events.domain.params.RequestStartParams;
 import me.marlon.leoner.musicando.events.domain.socket.ConnectionSocket;
 import me.marlon.leoner.musicando.events.service.*;
@@ -327,20 +327,20 @@ public class GameAggregation {
     }
 
     private void notifyGameResults(Game game, Match match) {
-        List<MatchResult> results = resultService.onMatchResult(match.getRounds());
+        List<MatchResultDTO> results = resultService.onMatchResult(match.getRounds());
         notifyGameResultsToPlayers(game.getId(), results);
         notifyGameResultsToHost(game, results);
     }
 
-    private void notifyGameResultsToPlayers(String gameId, List<MatchResult> results) {
+    private void notifyGameResultsToPlayers(String gameId, List<MatchResultDTO> results) {
         List<Player> players = playerService.getPlayers(gameId);
         for (Player player : players) {
-            Optional<MatchResult> playerResult = results.stream().filter(result -> player.getId().equals(result.getPlayerId())).findFirst();
+            Optional<MatchResultDTO> playerResult = results.stream().filter(result -> player.getId().equals(result.getPlayerId())).findFirst();
             broadcast(BroadcastEnum.MATCH_RESULT, player.getSessionId(), playerResult.orElse(null));
         }
     }
 
-    private void notifyGameResultsToHost(Game game, List<MatchResult> results) {
+    private void notifyGameResultsToHost(Game game, List<MatchResultDTO> results) {
         broadcast(BroadcastEnum.MATCH_RESULT, game.getSessionId(), results);
     }
 

@@ -11,6 +11,7 @@ export enum EventType {
 
 export enum BroadcastEvent {
     WELCOME = "welcome",
+    DISCONNECT = "disconnect",
     UPDATE_GAME = "game/update",
     UPDATE_MATCH = "match/update",
     MATCH_RESULT = "match/result",

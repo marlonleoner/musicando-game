@@ -1,4 +1,4 @@
-package me.marlon.leoner.musicando.events.domain.game.dto;
+package me.marlon.leoner.musicando.events.domain.game;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,13 +7,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MatchResult {
 
-    private String playerId;
-
     private Integer position;
 
-    private Integer totalPoints;
+    private String playerId;
 
     private Integer correctAnswers;
 
-    private Long totalGuessTime;
+    private Integer totalPoints;
+
+    private Integer totalGuessTime;
 }

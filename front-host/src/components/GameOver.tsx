@@ -24,7 +24,7 @@ const GameOver = () => {
                 <ul className="flex flex-col gap-2 mt-4 overflow-y-auto">
                     {matchResult.map((result, position) => {
                         const player = findPlayer(result.playerId);
-                        const avgTime = (result.totalGuessTime / (1000 * result.correctAnswers)).toFixed(2);
+                        const avgTime = (result.averageGuessTime / 1000).toFixed(2);
 
                         return (
                             <li
@@ -46,7 +46,7 @@ const GameOver = () => {
                                     </div>
                                     <div className="max-w-32 min-w-32 flex items-baseline tracking-tighter">
                                         <FaCrosshairs className="mr-2" size={16} color="#F8D34D" />
-                                        <span className="text-2xl font-black">{result.correctAnswers}</span>
+                                        <span className="text-2xl font-black">{result.totalCorrectAnswers}</span>
                                         <span className="text-sm opacity-70">acertos</span>
                                     </div>
                                     <div className="max-w-32 min-w-32 flex items-baseline tracking-tighter">

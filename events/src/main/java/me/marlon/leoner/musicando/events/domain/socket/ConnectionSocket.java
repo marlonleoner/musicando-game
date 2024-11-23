@@ -64,8 +64,6 @@ public class ConnectionSocket {
 
     @JsonIgnore
     public String getId() {
-        if (RoleEnum.HOST.equals(getRole())) return null;
-
         return Objects.nonNull(playerId) ? playerId : sessionId;
     }
 }

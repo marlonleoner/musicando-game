@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from "react";
-import { FaCheck, FaCircleMinus, FaCirclePlus } from "react-icons/fa6";
+import { FaCheck, FaSquareMinus, FaSquarePlus } from "react-icons/fa6";
 import { GameContext } from "../../context/GameContext";
 import { usePlaylist } from "../../hooks/useFetch";
 import { IPlaylist } from "../../types/types";
@@ -45,40 +45,60 @@ const Controlls = () => {
     };
 
     return (
-        <div className="flex flex-col gap-4 mx-2 my-3 p-4 bg-violet-800 bg-opacity-75 rounded-lg text-base">
-            <div className="w-full pb-4 flex justify-between uppercase font-bold border-b-2 border-solid border-gray-300">
-                <span>número de músicas</span>
-                <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => changeAmount(-1)} className="rounded-full">
-                        <FaCircleMinus size={16} />
+        <div className="grow flex flex-col gap-4 mx-2 my-3 p-4 bg-violet-800 bg-opacity-75 rounded-lg text-base">
+            <div className="w-full pb-4 flex justify-between text-lg font-bold border-b-2 border-solid border-gray-300">
+                <span className="uppercase">número de músicas</span>
+                <div className="flex items-center gap-4">
+                    <button
+                        type="button"
+                        onClick={() => changeAmount(-1)}
+                        className="rounded-full disabled:opacity-50 transition-all duration-200"
+                        disabled={numberOfSongs === 0}
+                    >
+                        <FaSquareMinus size={24} />
                     </button>
-                    <span className="flex-1">{numberOfSongsList[numberOfSongs]}</span>
-                    <button type="button" onClick={() => changeAmount(1)} className="rounded-full">
-                        <FaCirclePlus size={16} />
-                    </button>
-                </div>
-            </div>
-            <div className="w-full pb-4 flex justify-between uppercase font-bold border-b-2 border-solid border-gray-300">
-                <span>tempo da rodada</span>
-                <div className="flex items-center gap-2">
-                    <button type="button" className="rounded-full" onClick={() => changeTimer(-1)}>
-                        <FaCircleMinus size={16} />
-                    </button>
-                    <span className="flex-1">{roundDurationList[roundDuration]}</span>
-                    <button type="button" className="rounded-full" onClick={() => changeTimer(1)}>
-                        <FaCirclePlus size={16} />
+                    <span className="flex-1">{String(numberOfSongsList[numberOfSongs]).padStart(2, "0")}</span>
+                    <button
+                        type="button"
+                        onClick={() => changeAmount(1)}
+                        className="rounded-full disabled:opacity-50 transition-all duration-200"
+                        disabled={numberOfSongs === numberOfSongsList.length - 1}
+                    >
+                        <FaSquarePlus size={24} />
                     </button>
                 </div>
             </div>
-            <div className="overflow-x-auto scroll-smooth [scrollbar-width:none] flex gap-4 w-full">
+            <div className="w-full pb-4 flex justify-between text-lg font-bold border-b-2 border-solid border-gray-300">
+                <span className="uppercase">tempo da rodada</span>
+                <div className="flex items-center gap-4">
+                    <button
+                        type="button"
+                        onClick={() => changeTimer(-1)}
+                        className="rounded-full disabled:opacity-50 transition-all duration-200"
+                        disabled={roundDuration === 0}
+                    >
+                        <FaSquareMinus size={24} />
+                    </button>
+                    <span className="flex-1">{String(roundDurationList[roundDuration]).padStart(2, "0")}</span>
+                    <button
+                        type="button"
+                        onClick={() => changeTimer(1)}
+                        className="rounded-full disabled:opacity-50 transition-all duration-200"
+                        disabled={roundDuration === roundDurationList.length - 1}
+                    >
+                        <FaSquarePlus size={24} />
+                    </button>
+                </div>
+            </div>
+            <div className="w-full h-80 overflow-y-auto scroll-smooth [scrollbar-width:none] flex flex-col gap-4">
                 {data?.map((playlist) => (
                     <div
                         aria-hidden="true"
                         key={playlist.id}
-                        className="inline-flex flex-col relative w-32"
+                        className="w-full flex items-center space-x-4"
                         onClick={() => changePlaylistId(playlist)}
                     >
-                        <div className="relative w-32 h-32">
+                        <div className="w-24 h-24 flex-shrink-0 relative">
                             <img
                                 className="w-full h-full rounded-md object-cover"
                                 src={playlist.thumbnail}
@@ -90,14 +110,15 @@ const Controlls = () => {
                                 </div>
                             )}
                         </div>
-                        <div className="w-full truncate">
+                        <div className="max-w-xs h-full flex flex-col font-bold tracking-tighter overflow-y-hidden">
                             <span
-                                className={`text-sm font-bold tracking-[-0.1rem] capitalize ${
-                                    selectedPlaylist?.id !== playlist.id && "opacity-75"
-                                }`}
+                                className={`text-xl capitalize ${
+                                    selectedPlaylist?.id !== playlist.id && "opacity-90"
+                                } break-words line-clamp-2`}
                             >
                                 {playlist.name}
                             </span>
+                            <span className="text-sm opacity-80">{playlist.total_songs} músicas</span>
                         </div>
                     </div>
                 ))}

@@ -1,7 +1,7 @@
 package me.marlon.leoner.musicando.events.repository;
 
 import me.marlon.leoner.musicando.events.domain.game.RoundResult;
-import me.marlon.leoner.musicando.events.domain.game.dto.MatchResult;
+import me.marlon.leoner.musicando.events.domain.game.MatchResult;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -19,8 +19,8 @@ public interface RoundResultRepository extends MongoRepository<RoundResult, Stri
     List<RoundResult> findAllByIds(List<String> ids);
 
     @Aggregation(pipeline = {
-            "{ $match: { roundId: { '$in': ?0 }, correct: true } }",
-            "{ $group: { _id: { playerId: '$playerId' }, correctAnswers: { $sum: 1 }, totalPoints: { $sum: '$points' }, totalGuessTime: { $sum: '$guessTime' } } }",
+            "{ $match: { roundId: { '$in': ?0 } } }",
+            "{ $group: { _id: { playerId: '$playerId' }, correctAnswers: { $sum: { $cond: ['$correct', 1, 0] } }, totalPoints: { $sum: '$points' }, totalGuessTime: { $sum: '$guessTime' } } }",
             "{ $setWindowFields:  { sortBy: { totalPoints: -1 }, output: { position: { $denseRank: {} } } } }",
             "{ $project: { _id: 0, playerId: '$_id.playerId', totalPoints: 1, totalGuessTime: 2, correctAnswers: 3, position: 4 } }"
     })

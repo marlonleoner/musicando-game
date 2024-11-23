@@ -29,6 +29,6 @@ const useFetch = (url: string, path: string, fetchOnMount: boolean = false) => {
     return { isLoading: loading, status, data, doFetch };
 };
 
-export const useRoom = () => useFetch("http://localhost:7777", "/game");
+export const useRoom = () => useFetch("http://192.168.0.111:7777", "/game");
 
-export const usePlaylist = () => useFetch("http://localhost:8080", "/playlists", true);
+export const usePlaylist = () => useFetch("http://192.168.0.111:8080", "/playlists", true);

@@ -70,30 +70,31 @@ services:
     networks:
       - musicando-network
 
-  # front-host:
-  #   container_name: musicando-host
-  #   build:
-  #     context: front-host
-  #   tty: true
-  #   ports:
-  #     - 9090:9090
-  #   depends_on:
-  #     - manager
-  #     - events
-  #   networks:
-  #     - musicando-network
+  front-host:
+    container_name: musicando-host
+    build:
+      context: front-host
+    tty: true
+    ports:
+      - 9090:9090
+    depends_on:
+      - manager
+      - events
+    networks:
+      - musicando-network
 
-  # front-client:
-  #   container_name: musicando-client
-  #   build:
-  #     context: front-client
-  #   tty: true
-  #   ports:
-  #     - 80:80
-  #   depends_on:
-  #     - server
-  #   networks:
-  #     - musicando-network
+  front-client:
+    container_name: musicando-client
+    build:
+      context: front-client
+    tty: true
+    ports:
+      - 80:80
+    depends_on:
+      - manager
+      - events
+    networks:
+      - musicando-network
 
 networks:
   musicando-network:

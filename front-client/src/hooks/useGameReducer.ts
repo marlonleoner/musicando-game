@@ -16,6 +16,16 @@ const onWelcomeHandler = (state: IGameContext, object: any) => {
     };
 };
 
+const onDisconnectHandler = (state: IGameContext, { type, object }: IPayloadEvent): IGameContext => {
+    return {
+        ...state,
+        player: undefined,
+        game: undefined,
+        match: undefined,
+        round: undefined,
+    };
+};
+
 const onGameUpdate = (state: IGameContext, object: any) => {
     localStorage.setItem("msc:code", object.id);
 
@@ -62,6 +72,8 @@ export const useGameReducer = (state: IGameContext, payload: IPayloadEvent) => {
     switch (type) {
         case BroadcastEvent.WELCOME:
             return onWelcomeHandler(state, object);
+        case BroadcastEvent.DISCONNECT:
+            return onDisconnectHandler(state, payload);
         case BroadcastEvent.UPDATE_GAME:
             return onGameUpdate(state, object);
         case BroadcastEvent.UPDATE_MATCH:

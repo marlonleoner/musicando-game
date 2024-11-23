@@ -90,7 +90,8 @@ export interface IRoundResult {
 
 export interface IMatchResult {
     playerId: string;
-    correctAnswers: number;
+    position: number;
     totalPoints: number;
-    totalGuessTime: number;
+    totalCorrectAnswers: number;
+    averageGuessTime: number;
 }
